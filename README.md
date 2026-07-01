@@ -66,6 +66,11 @@ At minimum, set `AI_GATEWAY_API_KEY` and `AI_GATEWAY_BASE_URL`. See the [Environ
 | `AI_GATEWAY_BASE_URL` | Yes | Gateway base URL. For Makers Models, use `https://ai-gateway.edgeone.link/v1`. |
 | `AI_GATEWAY_MODEL` | No | Model ID. Defaults to `@makers/deepseek-v4-flash` (a free built-in model). |
 | `VITE_APP_MODE` | No | Runtime mode. `cloud` shows login, demo, and local download entry. `local` (default) enables full chat and management features. |
+| `DSPARK_ENDPOINT` | No | DSpark service endpoint. Required to enable the **DSpark Data Analysis** skill. |
+| `DSPARK_API_KEY` | No | API key for DSpark service authentication. |
+| `DSPARK_DEFAULT_CLUSTER` | No | Default DSpark cluster to use when not specified in a request. |
+
+To use the **DSpark Data Analysis** skill, set `DSPARK_ENDPOINT` to a working DSpark service endpoint. `DSPARK_API_KEY` and `DSPARK_DEFAULT_CLUSTER` are optional for authentication and default cluster selection. In the AgentsPanel, enable the **DSpark Data Analysis** skill for your agent, then ask for data-analysis tasks in chat.
 
 This template follows the OpenAI-compatible standard — point these at Makers Models or any compatible provider.
 

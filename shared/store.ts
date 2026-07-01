@@ -348,6 +348,49 @@ export class MemoryStore implements Store {
         },
         handler: 'scheduler',
       },
+      {
+        id: 'skill_dspark',
+        name: 'DSpark 数据分析',
+        description: '通过 DSpark 框架执行 Spark SQL 或脚本，完成数据分析、批处理、ETL 任务',
+        version: '1.0.0',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            action: {
+              type: 'string',
+              enum: ['submit', 'status', 'result'],
+              description: '操作类型：提交任务、查询状态、获取结果',
+            },
+            sqlOrScript: {
+              type: 'string',
+              description: 'Spark SQL 或脚本，action=submit 时必填',
+            },
+            jobId: {
+              type: 'string',
+              description: '任务 ID，action=status/result 时必填',
+            },
+            cluster: {
+              type: 'string',
+              description: '可选的 DSpark 集群名称',
+            },
+            params: {
+              type: 'object',
+              description: '可选的任务参数',
+            },
+          },
+          required: ['action'],
+        },
+        outputSchema: {
+          type: 'object',
+          properties: {
+            jobId: { type: 'string' },
+            status: { type: 'string' },
+            result: { type: 'object' },
+            error: { type: 'string' },
+          },
+        },
+        handler: 'dspark',
+      },
     ];
 
     for (const skill of skills) {
@@ -390,6 +433,7 @@ export class MemoryStore implements Store {
           'skill_list_project',
           'skill_dialogue_assistant',
           'skill_workflow_orchestrator',
+          'skill_dspark',
         ],
         isBuiltIn: true,
         generation: 0,
@@ -470,6 +514,26 @@ export class MemoryStore implements Store {
           '\n' +
           '自我成长：每次任务结束后，你会反思审核判断，识别可以改进的地方，并在后续任务中应用这些经验。',
         skillIds: ['skill_calculator', 'skill_reflect', 'skill_evolve_agent', 'skill_dialogue_assistant'],
+        isBuiltIn: true,
+        generation: 0,
+        createdAt: now,
+        updatedAt: now,
+      },
+      {
+        id: 'agent_data_analyst',
+        name: '数据分析师',
+        avatar: '📊',
+        description: '擅长使用 DSpark 进行数据分析和统计计算',
+        role: 'custom',
+        systemPrompt:
+          '你是数据分析师智能体。擅长使用 DSpark 进行数据分析、统计计算与批处理任务。\n' +
+          '- 根据用户的数据分析需求，编写清晰、高效的 Spark SQL 或脚本。\n' +
+          '- 使用 DSpark 技能提交任务、跟踪状态并获取结果。\n' +
+          '- 对分析结果进行解读，输出简洁、数据驱动的结论与可视化建议。\n' +
+          '- 在必要时读取相关文件或生成报告。\n' +
+          '\n' +
+          '自我成长：每次任务结束后，你会反思分析思路与输出质量，持续优化分析策略与提示。',
+        skillIds: ['skill_dspark', 'skill_dialogue_assistant', 'skill_file_handler'],
         isBuiltIn: true,
         generation: 0,
         createdAt: now,
