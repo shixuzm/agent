@@ -12,6 +12,7 @@ import type {
 } from './types';
 import { SKILL_IDS } from './types';
 import { KVStore } from './kvStore';
+import { getEnvFromProvider } from './configProvider';
 
 export type { Store } from './types';
 
@@ -720,7 +721,10 @@ let globalStore: Store | undefined;
 
 export function getStore(env?: Record<string, unknown>): Store {
   if (!globalStore) {
-    globalStore = env ? new KVStore(env) : new MemoryStore();
+    // 合并 env 与 appConfigProvider 注入的配置，provider 优先级更高
+    const providerEnv = getEnvFromProvider();
+    const mergedEnv: Record<string, unknown> = { ...(env ?? {}), ...providerEnv };
+    globalStore = Object.keys(mergedEnv).length > 0 ? new KVStore(mergedEnv) : new MemoryStore();
   }
   return globalStore;
 }

@@ -90,6 +90,22 @@ const zh = {
   "cloud.downloadButton": "下载本地安装包",
   "cloud.quickStartTitle": "快速开始",
   "cloud.quickStartDescription": "克隆仓库后，在终端执行以下命令即可启动本地服务。",
+
+  // ─── Settings panel ─────────────────────────────────────────────────
+  "settings.title": "设置",
+  "settings.apiKey": "AI Gateway API Key",
+  "settings.baseUrl": "AI Gateway Base URL",
+  "settings.model": "AI Gateway 模型",
+  "settings.dsparkEndpoint": "DSpark Endpoint",
+  "settings.dsparkApiKey": "DSpark API Key",
+  "settings.dsparkCluster": "DSpark 默认集群",
+  "settings.save": "保存",
+  "settings.cancel": "取消",
+  "settings.clear": "清除",
+  "settings.saved": "设置已保存。",
+  "settings.cleared": "设置已清除。",
+  "settings.firstRunHint": "请先配置 API 密钥后再使用助手。",
+  "settings.closeUnconfiguredHint": "API 密钥仍为空，未完成配置前助手可能无法正常工作。",
 } as const;
 
 export default zh;

@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
 import type { ModelConfig } from './types';
+import { mergeEnvWithProvider } from './configProvider';
 
 const DEFAULT_MODEL = '@makers/deepseek-v4-flash';
 
@@ -33,8 +34,10 @@ export async function chatCompletion(
   messages: ChatMessage[],
   config?: ModelConfig,
 ): Promise<string> {
-  const client = createLLMClient(env, config);
-  const model = resolveModelId(env, config);
+  // 合并 env 与 appConfigProvider 注入的配置，provider 优先级更高
+  const mergedEnv = mergeEnvWithProvider(env);
+  const client = createLLMClient(mergedEnv, config);
+  const model = resolveModelId(mergedEnv, config);
 
   const res = await client.chat.completions.create({
     model,

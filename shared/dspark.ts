@@ -1,3 +1,5 @@
+import { mergeEnvWithProvider } from './configProvider';
+
 export interface DSparkClientConfig {
   endpoint: string;
   apiKey?: string;
@@ -48,18 +50,20 @@ async function request<T>(url: string, init: RequestInit = {}): Promise<T> {
 }
 
 export function createDSparkClient(env: Record<string, string | undefined>): DSparkClient {
-  const cached = clientCache.get(buildKey(env));
+  // 合并 env 与 appConfigProvider 注入的配置，provider 优先级更高
+  const mergedEnv = mergeEnvWithProvider(env);
+  const cached = clientCache.get(buildKey(mergedEnv));
   if (cached) {
     return cached;
   }
 
-  const endpoint = env.DSPARK_ENDPOINT;
+  const endpoint = mergedEnv.DSPARK_ENDPOINT;
   if (!endpoint) {
     throw new Error('DSpark client not configured: missing DSPARK_ENDPOINT');
   }
 
-  const apiKey = env.DSPARK_API_KEY;
-  const defaultCluster = env.DSPARK_DEFAULT_CLUSTER;
+  const apiKey = mergedEnv.DSPARK_API_KEY;
+  const defaultCluster = mergedEnv.DSPARK_DEFAULT_CLUSTER;
 
   const client: DSparkClient = {
     async submitJob(sqlOrScript, options) {
@@ -108,6 +112,6 @@ export function createDSparkClient(env: Record<string, string | undefined>): DSp
     },
   };
 
-  clientCache.set(buildKey(env), client);
+  clientCache.set(buildKey(mergedEnv), client);
   return client;
 }

@@ -66,6 +66,7 @@ cp .env.example .env
 | `AI_GATEWAY_BASE_URL` | 是 | 网关 Base URL。Makers Models 请使用 `https://ai-gateway.edgeone.link/v1`。 |
 | `AI_GATEWAY_MODEL` | 否 | 模型 ID。默认 `@makers/deepseek-v4-flash`（内置免费模型）。 |
 | `VITE_APP_MODE` | 否 | 运行模式。`cloud` 显示登录、Demo 和本地下载入口；`local`（默认）启用完整聊天与管理功能。 |
+| `VITE_DIRECT_LLM` | 否 | 设置为 `true` 时，前端直接调用 LLM 服务，无需后端。移动端构建时自动启用。 |
 | `DSPARK_ENDPOINT` | 否 | DSpark 服务地址。启用 **DSpark 数据分析** 技能时必须配置。 |
 | `DSPARK_API_KEY` | 否 | DSpark 服务认证用的 API Key。 |
 | `DSPARK_DEFAULT_CLUSTER` | 否 | 请求中未指定集群时使用的默认 DSpark 集群。 |
@@ -96,6 +97,31 @@ npm run dev
 如需本地开发 Makers Agents，也可安装 EdgeOne CLI（`npm i -g edgeone`）并运行 `edgeone makers dev`。
 
 本地观测面板：`http://localhost:8080/agent-metrics`。
+
+## 移动端应用
+
+本模板同时提供 **Android**、**iOS**、**鸿蒙（HarmonyOS）** 三个平台的移动端应用。
+
+- 三端开箱即用。
+- 移动端无需配置环境变量，所有 API 配置均在应用内设置页面完成。
+- 首次打开应用会自动引导到设置页面。
+- 需配置 **AI Gateway API Key**（必填），以及 **Base URL** 和 **Model**。
+- 可选配置 **DSpark Endpoint**，用于启用 DSpark 数据分析技能。
+
+## 构建移动端应用
+
+按平台执行对应构建命令：
+
+```bash
+# Android
+npm run build:android
+
+# iOS
+npm run build:ios
+
+# HarmonyOS
+npm run build:harmony
+```
 
 ## 项目结构
 

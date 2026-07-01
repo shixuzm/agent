@@ -24,8 +24,10 @@ import GitHubLink from './components/GitHubLink';
 import DeployLink from './components/DeployLink';
 import { GrowthPanel } from './components/GrowthPanel';
 import { AgentsPanel } from './components/AgentsPanel';
+import { SettingsPanel } from './components/SettingsPanel';
 import { useT, MessageKeys } from './i18n';
 import { deleteSnapshot, loadSnapshot, saveSnapshot } from './lib/chatUiStore';
+import { hasAppConfig } from './lib/appConfig';
 import styles from './App.module.css';
 
 const LAMP_IDS = ['get_weather', 'get_clothing_advice', 'translate_text', 'text_statistics'] as const;
@@ -112,6 +114,9 @@ export default function AppInner() {
   const [selectedAgentId, setSelectedAgentId] = useState<string>('');
   const [showGrowthPanel, setShowGrowthPanel] = useState(false);
   const [showAgentsPanel, setShowAgentsPanel] = useState(false);
+  // Settings panel: opens automatically on first launch (no app config yet).
+  const [showSettings, setShowSettings] = useState(() => !hasAppConfig());
+  const [settingsFirstRun, setSettingsFirstRun] = useState(() => !hasAppConfig());
 
   const botMsgIdRef = useRef<string>('');
   const abortCtrlRef = useRef<AbortController | null>(null);
@@ -627,6 +632,16 @@ export default function AppInner() {
             >
               🌱 成长
             </button>
+            <button
+              className={styles.growthBtn}
+              onClick={() => {
+                setSettingsFirstRun(false);
+                setShowSettings(true);
+              }}
+              title={t('settings.title')}
+            >
+              ⚙️ {t('settings.title')}
+            </button>
             <ToolIndicators lamps={lamps} />
           </header>
 
@@ -656,6 +671,12 @@ export default function AppInner() {
         <AgentsPanel
           onClose={() => setShowAgentsPanel(false)}
           onAgentsChanged={() => void listAgents().then(setAgents)}
+        />
+      )}
+      {showSettings && (
+        <SettingsPanel
+          firstRun={settingsFirstRun}
+          onClose={() => setShowSettings(false)}
         />
       )}
       <GitHubLink />

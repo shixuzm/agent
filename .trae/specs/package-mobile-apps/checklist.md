@@ -1,0 +1,26 @@
+# Checklist
+
+- [x] 已调研当前项目结构、前端 API 调用方式和 shared 模块 env 使用方式
+- [x] `src/lib/appConfig.ts` 已创建，提供 `getAppConfig`、`setAppConfig`、`hasAppConfig`
+- [x] 配置持久化到 localStorage，重启后可恢复
+- [x] `shared/llm.ts` 支持优先从 appConfig 读取配置
+- [x] `shared/dspark.ts` 支持优先从 appConfig 读取配置
+- [x] `shared/store.ts` 支持优先从 appConfig 读取配置
+- [x] shared 模块在浏览器环境（无 process.env）下可正常工作
+- [x] `src/pages/Settings.tsx` 设置页面已创建
+- [x] 设置页面包含 API Key、Base URL、Model、DSpark 配置表单
+- [x] 设置页面已添加到路由 `/settings`
+- [x] UI 中已添加设置入口
+- [x] 首次启动未配置时自动跳转设置页面
+- [x] 前端可直接调用 LLM 服务，无需后端中转
+- [x] Capacitor 已安装并配置
+- [x] `capacitor.config.ts` 已创建
+- [x] Android 工程已添加
+- [x] iOS 工程已添加
+- [x] `npm run build:android` 可成功同步产物到 Android 工程
+- [x] `npm run build:ios` 可成功同步产物到 iOS 工程
+- [x] 鸿蒙 `harmony/` 目录和 ArkTS WebView 入口已创建
+- [x] `npm run build:harmony` 可成功生成鸿蒙工程产物
+- [x] `README.md` 已更新移动端使用说明
+- [x] `npx tsc --noEmit` 无类型错误
+- [x] `npm run build` 构建成功

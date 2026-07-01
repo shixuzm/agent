@@ -90,6 +90,22 @@ const en = {
   "cloud.downloadButton": "Download Local Package",
   "cloud.quickStartTitle": "Quick Start",
   "cloud.quickStartDescription": "After cloning, run the following commands in your terminal to start the local service.",
+
+  // ─── Settings panel ─────────────────────────────────────────────────
+  "settings.title": "Settings",
+  "settings.apiKey": "AI Gateway API Key",
+  "settings.baseUrl": "AI Gateway Base URL",
+  "settings.model": "AI Gateway Model",
+  "settings.dsparkEndpoint": "DSpark Endpoint",
+  "settings.dsparkApiKey": "DSpark API Key",
+  "settings.dsparkCluster": "DSpark Default Cluster",
+  "settings.save": "Save",
+  "settings.cancel": "Cancel",
+  "settings.clear": "Clear",
+  "settings.saved": "Settings saved.",
+  "settings.cleared": "Settings cleared.",
+  "settings.firstRunHint": "Please configure your API key before using the assistant.",
+  "settings.closeUnconfiguredHint": "API key is still empty. The assistant may not work until it is configured.",
 } as const;
 
 export default en;
