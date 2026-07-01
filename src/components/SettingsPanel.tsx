@@ -18,6 +18,27 @@ interface SettingsPanelProps {
   firstRun?: boolean;
 }
 
+interface MemoryStats {
+  total: number;
+  byType: Record<'project' | 'note' | 'task' | 'checkpoint' | 'generic', number>;
+  sizeBytes: number;
+}
+
+async function getMemoryStats(): Promise<MemoryStats | null> {
+  if (window.electronAPI?.getMemoryStats) {
+    return window.electronAPI.getMemoryStats();
+  }
+  return null;
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes === 0) return '0 B';
+  const units = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(1024));
+  const value = bytes / Math.pow(1024, i);
+  return `${value.toFixed(i === 0 ? 0 : 2)} ${units[i]}`;
+}
+
 export function SettingsPanel({ onClose, firstRun }: SettingsPanelProps) {
   const { t } = useT();
 
@@ -29,6 +50,11 @@ export function SettingsPanel({ onClose, firstRun }: SettingsPanelProps) {
   const [dsparkDefaultCluster, setDsparkDefaultCluster] = useState('');
 
   const [status, setStatus] = useState<{ kind: 'ok' | 'warn' | null; text: string }>({ kind: null, text: '' });
+  const [activeTab, setActiveTab] = useState<'general' | 'memory'>('general');
+
+  const [memoryStats, setMemoryStats] = useState<MemoryStats | null>(null);
+  const [memoryEnabled, setMemoryEnabled] = useState<boolean>(false);
+  const [isElectron, setIsElectron] = useState<boolean>(false);
 
   // Hydrate the form from localStorage on mount.
   useEffect(() => {
@@ -41,6 +67,26 @@ export function SettingsPanel({ onClose, firstRun }: SettingsPanelProps) {
     setDsparkApiKey(config.dsparkApiKey);
     setDsparkDefaultCluster(config.dsparkDefaultCluster);
   }, []);
+
+  // Load memory stats on mount and when switching to the memory tab.
+  useEffect(() => {
+    const electronAvailable = typeof window !== 'undefined' && !!window.electronAPI?.getMemoryStats;
+    setIsElectron(electronAvailable);
+
+    if (!electronAvailable) {
+      setMemoryEnabled(false);
+      setMemoryStats(null);
+      return;
+    }
+
+    getMemoryStats().then((stats) => {
+      setMemoryStats(stats);
+      setMemoryEnabled(!!stats);
+    }).catch(() => {
+      setMemoryStats(null);
+      setMemoryEnabled(false);
+    });
+  }, [activeTab]);
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,6 +118,23 @@ export function SettingsPanel({ onClose, firstRun }: SettingsPanelProps) {
     setStatus({ kind: 'warn', text: t('settings.cleared') });
   };
 
+  const handleClearMemories = async () => {
+    if (!window.confirm(t('settings.memory.clearConfirm'))) return;
+    try {
+      const ok = await window.electronAPI?.clearAllMemories();
+      if (ok) {
+        setStatus({ kind: 'ok', text: t('settings.memory.clearSuccess') });
+      } else {
+        setStatus({ kind: 'warn', text: t('settings.memory.disabled') });
+      }
+      const stats = await getMemoryStats();
+      setMemoryStats(stats);
+      setMemoryEnabled(!!stats);
+    } catch (e) {
+      setStatus({ kind: 'warn', text: e instanceof Error ? e.message : String(e) });
+    }
+  };
+
   const handleClose = () => {
     // Per Task 5: don't block closing, but warn if still unconfigured.
     if (!hasAppConfig()) {
@@ -99,96 +162,176 @@ export function SettingsPanel({ onClose, firstRun }: SettingsPanelProps) {
           <p className={styles.hint}>{t('settings.firstRunHint')}</p>
         )}
 
+        <div className={styles.tabs}>
+          <button
+            type="button"
+            className={`${styles.tab} ${activeTab === 'general' ? styles.tabActive : ''}`}
+            onClick={() => setActiveTab('general')}
+          >
+            {t('settings.title')}
+          </button>
+          <button
+            type="button"
+            className={`${styles.tab} ${activeTab === 'memory' ? styles.tabActive : ''}`}
+            onClick={() => setActiveTab('memory')}
+          >
+            {t('settings.memory.title')}
+          </button>
+        </div>
+
         <div className={styles.body}>
-          <form className={styles.form} onSubmit={handleSave}>
-            <label>
-              <span>{t('settings.apiKey')}</span>
-              <input
-                type="password"
-                value={aiGatewayApiKey}
-                onChange={(e) => setAiGatewayApiKey(e.target.value)}
-                autoComplete="off"
-              />
-            </label>
-            <label>
-              <span>{t('settings.baseUrl')}</span>
-              <input
-                type="text"
-                value={aiGatewayBaseUrl}
-                onChange={(e) => setAiGatewayBaseUrl(e.target.value)}
-                placeholder={DEFAULT_BASE_URL}
-              />
-            </label>
-            <label>
-              <span>{t('settings.model')}</span>
-              <input
-                type="text"
-                value={aiGatewayModel}
-                onChange={(e) => setAiGatewayModel(e.target.value)}
-                placeholder={DEFAULT_MODEL}
-              />
-            </label>
+          {activeTab === 'general' && (
+            <form className={styles.form} onSubmit={handleSave}>
+              <label>
+                <span>{t('settings.apiKey')}</span>
+                <input
+                  type="password"
+                  value={aiGatewayApiKey}
+                  onChange={(e) => setAiGatewayApiKey(e.target.value)}
+                  autoComplete="off"
+                />
+              </label>
+              <label>
+                <span>{t('settings.baseUrl')}</span>
+                <input
+                  type="text"
+                  value={aiGatewayBaseUrl}
+                  onChange={(e) => setAiGatewayBaseUrl(e.target.value)}
+                  placeholder={DEFAULT_BASE_URL}
+                />
+              </label>
+              <label>
+                <span>{t('settings.model')}</span>
+                <input
+                  type="text"
+                  value={aiGatewayModel}
+                  onChange={(e) => setAiGatewayModel(e.target.value)}
+                  placeholder={DEFAULT_MODEL}
+                />
+              </label>
 
-            <p className={styles.optional}>DSpark (optional)</p>
+              <p className={styles.optional}>DSpark (optional)</p>
 
-            <label>
-              <span>{t('settings.dsparkEndpoint')}</span>
-              <input
-                type="text"
-                value={dsparkEndpoint}
-                onChange={(e) => setDsparkEndpoint(e.target.value)}
-              />
-            </label>
-            <label>
-              <span>{t('settings.dsparkApiKey')}</span>
-              <input
-                type="password"
-                value={dsparkApiKey}
-                onChange={(e) => setDsparkApiKey(e.target.value)}
-                autoComplete="off"
-              />
-            </label>
-            <label>
-              <span>{t('settings.dsparkCluster')}</span>
-              <input
-                type="text"
-                value={dsparkDefaultCluster}
-                onChange={(e) => setDsparkDefaultCluster(e.target.value)}
-              />
-            </label>
+              <label>
+                <span>{t('settings.dsparkEndpoint')}</span>
+                <input
+                  type="text"
+                  value={dsparkEndpoint}
+                  onChange={(e) => setDsparkEndpoint(e.target.value)}
+                />
+              </label>
+              <label>
+                <span>{t('settings.dsparkApiKey')}</span>
+                <input
+                  type="password"
+                  value={dsparkApiKey}
+                  onChange={(e) => setDsparkApiKey(e.target.value)}
+                  autoComplete="off"
+                />
+              </label>
+              <label>
+                <span>{t('settings.dsparkCluster')}</span>
+                <input
+                  type="text"
+                  value={dsparkDefaultCluster}
+                  onChange={(e) => setDsparkDefaultCluster(e.target.value)}
+                />
+              </label>
 
-            <div className={styles.actions}>
-              <button
-                type="button"
-                className={styles.dangerBtn}
-                onClick={handleClear}
-              >
-                {t('settings.clear')}
-              </button>
-              <div className={styles.actionsRight}>
+              <div className={styles.actions}>
                 <button
                   type="button"
-                  className={styles.secondaryBtn}
-                  onClick={handleClose}
+                  className={styles.dangerBtn}
+                  onClick={handleClear}
                 >
-                  {t('settings.cancel')}
+                  {t('settings.clear')}
                 </button>
-                <button type="submit" className={styles.primaryBtn}>
-                  {t('settings.save')}
+                <div className={styles.actionsRight}>
+                  <button
+                    type="button"
+                    className={styles.secondaryBtn}
+                    onClick={handleClose}
+                  >
+                    {t('settings.cancel')}
+                  </button>
+                  <button type="submit" className={styles.primaryBtn}>
+                    {t('settings.save')}
+                  </button>
+                </div>
+              </div>
+            </form>
+          )}
+
+          {activeTab === 'memory' && (
+            <div className={styles.memoryPanel}>
+              <div className={styles.memoryStatus}>
+                <span
+                  className={`${styles.memoryIndicator} ${
+                    memoryEnabled ? styles.memoryIndicatorOn : styles.memoryIndicatorOff
+                  }`}
+                />
+                <span>
+                  {memoryEnabled
+                    ? t('settings.memory.enabled')
+                    : t('settings.memory.disabled')}
+                </span>
+              </div>
+
+              {!isElectron && (
+                <p className={styles.memoryHint}>{t('settings.memory.desktopOnly')}</p>
+              )}
+
+              {isElectron && memoryStats && (
+                <>
+                  <div className={styles.memoryStatRow}>
+                    <span>{t('settings.memory.total')}</span>
+                    <strong>{memoryStats.total}</strong>
+                  </div>
+                  <div className={styles.memoryStatRow}>
+                    <span>{t('settings.memory.size')}</span>
+                    <strong>{formatBytes(memoryStats.sizeBytes)}</strong>
+                  </div>
+                  <div className={styles.memoryTypeGrid}>
+                    {(
+                      ['project', 'note', 'task', 'checkpoint', 'generic'] as const
+                    ).map((type) => (
+                      <div key={type} className={styles.memoryTypeItem}>
+                        <span className={styles.memoryTypeLabel}>{type}</span>
+                        <strong className={styles.memoryTypeValue}>
+                          {memoryStats.byType[type] ?? 0}
+                        </strong>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {isElectron && !memoryStats && (
+                <p className={styles.memoryHint}>{t('settings.memory.disabled')}</p>
+              )}
+
+              <div className={styles.memoryActions}>
+                <button
+                  type="button"
+                  className={styles.dangerBtn}
+                  onClick={handleClearMemories}
+                  disabled={!isElectron}
+                >
+                  {t('settings.memory.clear')}
                 </button>
               </div>
             </div>
+          )}
 
-            {status.kind && (
-              <div
-                className={`${styles.status} ${
-                  status.kind === 'ok' ? styles.statusOk : styles.statusWarn
-                }`}
-              >
-                {status.text}
-              </div>
-            )}
-          </form>
+          {status.kind && (
+            <div
+              className={`${styles.status} ${
+                status.kind === 'ok' ? styles.statusOk : styles.statusWarn
+              }`}
+            >
+              {status.text}
+            </div>
+          )}
         </div>
       </div>
     </div>

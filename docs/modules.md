@@ -6,6 +6,8 @@
 |------|------|--------|------|
 | 前端 UI | `src/` | React + TypeScript + Vite | 用户界面、聊天交互、设置页面 |
 | 核心逻辑 | `shared/` | TypeScript | 智能体管理、技能执行、会话存储 |
+| 记忆存储 | `shared/memory/` | TypeScript + SQLite/FTS5/sql.js | 本地持久化记忆、FTS5 全文检索、Markdown 双向同步 |
+| checkpoint-writer | `shared/orchestrator.ts` | TypeScript | 自动维护会话检查点的子智能体 |
 | LLM 适配 | `shared/llm.ts` | TypeScript + OpenAI SDK | 调用 LLM 服务（DeepSeek/GPT等） |
 | DSpark 适配 | `shared/dspark.ts` | TypeScript + fetch | 调用 DSpark 数据分析框架 |
 | 配置桥接 | `shared/configProvider.ts` | TypeScript | 前端配置注入到 shared 模块 |

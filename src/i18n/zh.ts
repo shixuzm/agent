@@ -106,6 +106,17 @@ const zh = {
   "settings.cleared": "设置已清除。",
   "settings.firstRunHint": "请先配置 API 密钥后再使用助手。",
   "settings.closeUnconfiguredHint": "API 密钥仍为空，未完成配置前助手可能无法正常工作。",
+
+  // ─── 记忆管理 ────────────────────────────────────────────────────────
+  "settings.memory.title": "记忆管理",
+  "settings.memory.enabled": "记忆已启用",
+  "settings.memory.disabled": "记忆未启用",
+  "settings.memory.desktopOnly": "记忆管理功能在桌面端可用。",
+  "settings.memory.total": "记忆总条数",
+  "settings.memory.size": "数据库大小",
+  "settings.memory.clear": "清空所有记忆",
+  "settings.memory.clearConfirm": "确定要永久清空所有记忆吗？此操作不可恢复。",
+  "settings.memory.clearSuccess": "所有记忆已清空。",
 } as const;
 
 export default zh;

@@ -1,0 +1,28 @@
+# Checklist
+
+- [x] 已调研当前 MemoryStore / KVStore、orchestrator、chat 接口和前端恢复流程
+- [x] 已确认 SQLite 在各运行环境（Node.js 桌面端 / EdgeOne 云端 / 浏览器）的可用性
+- [x] SQLite 依赖已安装（better-sqlite3 或兼容 wasm 方案）
+- [x] `memories` 表和 `memories_fts` FTS5 虚拟表已创建
+- [x] `checkpoints` 表已创建
+- [x] `shared/memory/sqlite.ts` 数据库封装模块已创建
+- [x] `shared/memory/store.ts` 提供 add / update / search / delete / clear 能力
+- [x] `shared/memory/checkpoint.ts` 提供 load / save / list 能力
+- [x] `shared/memory/tasks.ts` 提供任务进展读写能力
+- [x] `shared/memory/notes.ts` 提供笔记暂存读写能力
+- [x] SQLite 与 Markdown 文件双向同步机制已实现
+- [x] `MEMORY.md`、`notes.md`、`tasks/<id>/progress.md` 人类可读且保持同步
+- [x] `agent_checkpoint_writer` 子智能体已在 `shared/agents.ts` 中注册
+- [x] checkpoint-writer 的 system prompt 已设计并实现
+- [x] orchestrator 在合适时机调用 checkpoint-writer 更新检查点
+- [x] 会话恢复时自动读取 checkpoint 并注入上下文
+- [x] 用户输入触发 FTS5 搜索，相关记忆片段注入 system prompt
+- [x] 注入格式固定，且不会因记忆过长超出 token 限制
+- [x] SettingsPanel 已添加「记忆管理」入口
+- [x] 记忆管理界面显示统计信息并支持清空记忆
+- [x] 云端函数场景（SQLite 不可用时）gracefully 回退到 MemoryStore
+- [x] `docs/modules.md` 已添加记忆模块说明
+- [x] README.md / README_zh-CN.md 已添加本地记忆说明
+- [x] `npx tsc --noEmit` 无类型错误
+- [x] `npm run build` Web 构建成功
+- [x] `npm run build:desktop` 桌面端构建成功

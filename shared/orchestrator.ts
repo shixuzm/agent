@@ -1,8 +1,10 @@
-import type { AgentDefinition, OrchestratorInput, Task, ImprovementProposal } from './types';
+import type { AgentDefinition, OrchestratorInput, Task, ImprovementProposal, Conversation } from './types';
 import { getAgent, getSpecialistAgents } from './agents';
-import { chatCompletion } from './llm';
+import { chatCompletion, type ChatMessage } from './llm';
 import { getSkillDescriptionsForAgent, executeSkill } from './skills';
 import { getStore } from './store';
+import { getGlobalMemoryStore } from './memory/store.js';
+import { loadCheckpoint, saveCheckpoint } from './memory/checkpoint.js';
 import { randomUUID } from '../agents/_utils';
 
 export interface OrchestratorResult {
@@ -85,10 +87,16 @@ export async function executeAgentTask(
   agent: AgentDefinition,
   taskInput: string,
   conversationContext: string,
+  memoryContext: string = '',
 ): Promise<string> {
   const skillDescriptions = await getSkillDescriptionsForAgent(agent.skillIds, env);
 
-  const systemPrompt = `${agent.systemPrompt}\n\n你可以使用以下技能（当前为模拟实现，如需调用可在回复中说明）：\n${skillDescriptions}\n\n直接给出最终答案，保持简洁。`;
+  const systemPrompt = [
+    agent.systemPrompt,
+    `你可以使用以下技能（当前为模拟实现，如需调用可在回复中说明）：\n${skillDescriptions}`,
+    memoryContext,
+    '直接给出最终答案，保持简洁。',
+  ].filter(Boolean).join('\n\n');
 
   const messages = [
     { role: 'system' as const, content: systemPrompt },
@@ -199,6 +207,74 @@ export async function createAgentFromDescription(
   return result.agent;
 }
 
+const MAX_MEMORY_ITEM_LENGTH = 200;
+const MAX_MEMORY_CONTEXT_LENGTH = 2000;
+
+function truncateMemoryItem(title: string, content: string): string {
+  const text = `${title}: ${content}`;
+  return text.length > MAX_MEMORY_ITEM_LENGTH ? `${text.slice(0, MAX_MEMORY_ITEM_LENGTH)}...` : text;
+}
+
+function buildMemoryContext(checkpointText: string | null, relevantMemories: string): string {
+  const parts: string[] = [];
+  if (checkpointText) {
+    parts.push(`## Conversation Checkpoint\n${checkpointText}`);
+  }
+  if (relevantMemories) {
+    parts.push(`## Relevant Memories\n${relevantMemories}`);
+  }
+  let context = parts.join('\n\n');
+  if (context.length > MAX_MEMORY_CONTEXT_LENGTH) {
+    context = `${context.slice(0, MAX_MEMORY_CONTEXT_LENGTH)}\n\n...`;
+  }
+  return context;
+}
+
+const checkpointUpdateCounters = new Map<string, number>();
+
+function shouldUpdateCheckpoint(conversation: Conversation, conversationId: string): boolean {
+  if (conversation.messages.length <= 2) return false;
+  const userMessageCount = conversation.messages.filter(m => m.role === 'user').length;
+  const lastUpdatedCount = checkpointUpdateCounters.get(conversationId) ?? 0;
+  if (userMessageCount - lastUpdatedCount >= 3) {
+    checkpointUpdateCounters.set(conversationId, userMessageCount);
+    return true;
+  }
+  return false;
+}
+
+async function updateCheckpoint(
+  env: Record<string, string | undefined>,
+  conversation: Conversation | undefined,
+): Promise<string | null> {
+  if (!conversation || !shouldUpdateCheckpoint(conversation, conversation.id)) {
+    return null;
+  }
+
+  const store = getStore(env);
+  const agent = await store.getAgent('agent_checkpoint_writer');
+  if (!agent) {
+    return null;
+  }
+
+  const historyText = conversation.messages
+    .slice(-20)
+    .map(m => `${m.role}: ${m.content}`)
+    .join('\n');
+
+  const messages: ChatMessage[] = [
+    { role: 'system', content: agent.systemPrompt },
+    { role: 'user', content: historyText },
+  ];
+
+  try {
+    return await chatCompletion(env, messages, agent.modelConfig);
+  } catch (e) {
+    console.error('[checkpoint] failed to generate:', e);
+    return null;
+  }
+}
+
 /**
  * Plan a complex task into subtasks and execute them.
  * MVP: only decomposes when explicitly requested or when the message contains multiple distinct tasks.
@@ -214,6 +290,22 @@ export async function planAndExecute(
     .slice(-10)
     .map(m => `${m.role}: ${m.content}`)
     .join('\n');
+
+  // 注入检查点与相关记忆
+  const memoryStore = await getGlobalMemoryStore().catch(() => null);
+  let checkpointText: string | null = null;
+  let relevantMemories = '';
+
+  if (memoryStore?.isEnabled()) {
+    checkpointText = loadCheckpoint(memoryStore, input.conversationId);
+
+    const searchResults = memoryStore.searchMemories(input.message, { limit: 5 });
+    relevantMemories = searchResults
+      .map(r => `- ${truncateMemoryItem(r.memory.title, r.memory.content)}`)
+      .join('\n');
+  }
+
+  const memoryContext = buildMemoryContext(checkpointText, relevantMemories);
 
   // Handle explicit self-improvement / code improvement requests
   const lowerInput = input.message.toLowerCase();
@@ -302,7 +394,7 @@ export async function planAndExecute(
   // Step 3: execute task
   let response: string;
   try {
-    response = await executeAgentTask(env, agent, input.message, contextText);
+    response = await executeAgentTask(env, agent, input.message, contextText, memoryContext);
     task.status = 'completed';
     task.output = response;
     task.completedAt = Date.now();
@@ -330,6 +422,21 @@ export async function planAndExecute(
 
   // Step 5: trigger self-growth asynchronously
   triggerSelfGrowth(env, agent.id, input.message, response, taskId, input.conversationId);
+
+  // 异步更新 checkpoint，不阻塞响应
+  void (async () => {
+    try {
+      const checkpointMemoryStore = await getGlobalMemoryStore();
+      if (checkpointMemoryStore?.isEnabled()) {
+        const checkpointContent = await updateCheckpoint(env, conversation);
+        if (checkpointContent) {
+          saveCheckpoint(checkpointMemoryStore, input.conversationId, checkpointContent);
+        }
+      }
+    } catch (e) {
+      console.error('[checkpoint] update failed:', e);
+    }
+  })();
 
   return {
     agentId: agent.id,

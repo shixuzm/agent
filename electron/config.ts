@@ -36,3 +36,20 @@ export function registerConfigIpc(): void {
     return true;
   });
 }
+
+export function registerMemoryIpc(): void {
+  ipcMain.handle('memory:stats', async () => {
+    const { getGlobalMemoryStore } = await import('../shared/memory/store.js');
+    const memoryStore = await getGlobalMemoryStore().catch(() => null);
+    if (!memoryStore?.isEnabled()) return null;
+    return memoryStore.getStats();
+  });
+
+  ipcMain.handle('memory:clear', async () => {
+    const { getGlobalMemoryStore } = await import('../shared/memory/store.js');
+    const memoryStore = await getGlobalMemoryStore().catch(() => null);
+    if (!memoryStore?.isEnabled()) return false;
+    memoryStore.clearAll();
+    return true;
+  });
+}

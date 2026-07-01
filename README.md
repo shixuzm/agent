@@ -18,6 +18,19 @@ A minimal, production-shaped starter that wires `@openai/agents` into EdgeOne Ma
 - **Dual cancellation** — frontend `AbortController` plus backend `AbortSignal` interrupts the LLM call mid-stream.
 - **Two-folder backend** — long-running stateful work in `agents/`, short stateless `/history` in `cloud-functions/`.
 
+## Persistent Local Memory
+
+The agent maintains local persistent memory across sessions using SQLite FTS5:
+
+- `MEMORY.md` — project-level knowledge and architecture decisions
+- `checkpoint.md` — automatic session checkpoint maintained by the checkpoint-writer sub-agent
+- `notes.md` — agent scratchpad for temporary notes
+- `tasks/<id>/progress.md` — per-task progress logs
+
+When a session resumes, the agent automatically injects relevant memories into the context, so you don't need to re-explain the project background.
+
+Memory is available in desktop (Electron) and local Node.js environments. Cloud (EdgeOne Functions) and pure browser builds gracefully fall back to in-memory storage.
+
 ## Usage
 
 This template supports two usage modes: **Cloud** and **Local**.

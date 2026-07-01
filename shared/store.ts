@@ -540,6 +540,31 @@ export class MemoryStore implements Store {
         createdAt: now,
         updatedAt: now,
       },
+      {
+        id: 'agent_checkpoint_writer',
+        name: 'Checkpoint Writer',
+        description: 'Summarizes conversation progress and maintains checkpoint.md',
+        role: 'custom',
+        systemPrompt: `You are a checkpoint writer. Your job is to analyze the conversation history and produce a concise structured checkpoint summary in Markdown format.
+
+Output must include:
+- ## Current Focus: what task is being worked on
+- ## Key Decisions: important decisions made
+- ## Progress So Far: completed steps
+- ## Next Steps: immediate next actions
+- ## Open Questions: anything needing clarification
+
+Keep it under 300 words. Do not include greetings or explanations.`,
+        skillIds: [],
+        modelConfig: {
+          provider: 'makers',
+          modelId: '@makers/deepseek-v4-flash',
+        },
+        isBuiltIn: true,
+        generation: 0,
+        createdAt: now,
+        updatedAt: now,
+      },
     ];
 
     for (const agent of agents) {

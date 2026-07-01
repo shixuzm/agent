@@ -180,3 +180,126 @@
   background: rgba(250, 204, 21, 0.1);
   color: #facc15;
 }
+
+/* Tabs */
+.tabs {
+  display: flex;
+  border-bottom: 1px solid var(--bg-border);
+  padding: 0 20px;
+  gap: 8px;
+}
+
+.tab {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 10px 8px;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.tab:hover {
+  color: var(--text-primary);
+}
+
+.tabActive {
+  color: var(--accent-gold);
+  border-bottom-color: var(--accent-gold);
+}
+
+/* Memory management panel */
+.memoryPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.memoryStatus {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+}
+
+.memoryIndicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.memoryIndicatorOn {
+  background: #4ade80;
+  box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.2);
+}
+
+.memoryIndicatorOff {
+  background: #9ca3af;
+}
+
+.memoryHint {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.memoryStatRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  padding: 8px 12px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--bg-border);
+  border-radius: var(--radius-md);
+}
+
+.memoryStatRow strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.memoryTypeGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.memoryTypeItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--bg-border);
+  border-radius: var(--radius-md);
+}
+
+.memoryTypeLabel {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: capitalize;
+}
+
+.memoryTypeValue {
+  font-size: 1rem;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.memoryActions {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 4px;
+}
+
+.dangerBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

@@ -1,6 +1,6 @@
 import { app, BrowserWindow } from 'electron';
 import path from 'path';
-import { registerConfigIpc } from './config';
+import { registerConfigIpc, registerMemoryIpc } from './config';
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -14,13 +14,15 @@ function createWindow() {
   });
 
   // 加载前端构建产物
-  win.loadFile(path.join(__dirname, '..', 'dist', 'index.html'));
+  win.loadFile(path.join(__dirname, '..', '..', 'dist', 'index.html'));
 }
 
 app.whenReady().then(() => {
   // 注册桌面端配置 IPC（config:get / config:set），
   // 前端可通过 window.electronAPI 读写 electron-store 持久化配置。
   registerConfigIpc();
+  // 注册记忆管理 IPC（memory:stats / memory:clear）。
+  registerMemoryIpc();
 
   createWindow();
   app.on('activate', () => {

@@ -199,6 +199,19 @@ async function runDirectChatStream(
         content: m.content,
       }));
 
+    // 2.5 直连模式下也尝试注入 checkpoint（记忆模块在桌面/本地可用）
+    let checkpointText: string | null = null;
+    try {
+      const { getGlobalMemoryStore } = await import('../shared/memory/store');
+      const memoryStore = await getGlobalMemoryStore();
+      if (memoryStore?.isEnabled()) {
+        const { loadCheckpoint } = await import('../shared/memory/checkpoint');
+        checkpointText = loadCheckpoint(memoryStore, convId);
+      }
+    } catch (e) {
+      console.warn('[direct-chat] failed to load checkpoint:', e);
+    }
+
     // 3. 发送 agent_selected 事件（让 UI 显示当前使用的智能体）
     if (callbacks.onAgentSelected) {
       callbacks.onAgentSelected({
@@ -219,9 +232,11 @@ async function runDirectChatStream(
     // 4. 调用 chatCompletion（非流式）
     const messages: import('../shared/llm').ChatMessage[] = [
       { role: 'system', content: agent.systemPrompt },
-      ...historyMessages,
-      { role: 'user', content: message },
     ];
+    if (checkpointText) {
+      messages.push({ role: 'system', content: `## Conversation Checkpoint\n${checkpointText}` });
+    }
+    messages.push(...historyMessages, { role: 'user', content: message });
 
     const response = await chatCompletion({}, messages, agent.modelConfig);
 

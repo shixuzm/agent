@@ -106,6 +106,17 @@ const en = {
   "settings.cleared": "Settings cleared.",
   "settings.firstRunHint": "Please configure your API key before using the assistant.",
   "settings.closeUnconfiguredHint": "API key is still empty. The assistant may not work until it is configured.",
+
+  // ─── Memory management ───────────────────────────────────────────────
+  "settings.memory.title": "Memory",
+  "settings.memory.enabled": "Memory enabled",
+  "settings.memory.disabled": "Memory disabled",
+  "settings.memory.desktopOnly": "Memory management is available on desktop.",
+  "settings.memory.total": "Total memories",
+  "settings.memory.size": "Database size",
+  "settings.memory.clear": "Clear all memories",
+  "settings.memory.clearConfirm": "Permanently clear all memories? This cannot be undone.",
+  "settings.memory.clearSuccess": "All memories cleared.",
 } as const;
 
 export default en;

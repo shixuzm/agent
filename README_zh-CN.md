@@ -18,6 +18,19 @@
 - **双重取消** —— 前端 `AbortController` + 后端 `AbortSignal`，可中途打断 LLM。
 - **后端拆两层** —— 有状态的长连接放 `agents/`，无状态的 `/history` 放 `cloud-functions/`。
 
+## 本地持久化记忆
+
+智能体使用 SQLite FTS5 在本地维护跨会话持久化记忆：
+
+- `MEMORY.md` — 项目级知识和架构决策
+- `checkpoint.md` — 由 checkpoint-writer 子智能体自动维护的会话检查点
+- `notes.md` — Agent 临时笔记区
+- `tasks/<id>/progress.md` — 每个任务的进展日志
+
+会话恢复时，智能体会自动将相关记忆注入上下文，无需重新解释项目背景。
+
+记忆功能在桌面端（Electron）和本地 Node.js 环境中可用。云端（EdgeOne Functions）和纯浏览器构建会优雅回退到内存存储。
+
 ## 使用方式
 
 本模板支持两种使用方式：**云端模式** 和 **本地模式**。
