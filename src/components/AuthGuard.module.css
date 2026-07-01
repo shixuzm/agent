@@ -1,0 +1,25 @@
+.logoutBtn {
+  position: fixed;
+  top: 14px;
+  left: 18px;
+  z-index: 1000;
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: none;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  cursor: pointer;
+  backdrop-filter: blur(12px);
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+.logoutBtn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+}
+
+.logoutBtn:active {
+  transform: scale(0.96);
+}

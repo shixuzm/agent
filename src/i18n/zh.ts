@@ -56,9 +56,40 @@ const zh = {
   // Language toggle
   "lang.switch": "English",
 
+  // Login
+  "login.title": "账户登录",
+  "login.username": "用户名",
+  "login.usernamePlaceholder": "请输入用户名",
+  "login.token": "密码 / Token",
+  "login.tokenPlaceholder": "请输入密码或 Token",
+  "login.submit": "登录",
+  "login.error.empty": "请输入用户名和 Token",
+  "login.logout": "退出登录",
+
   // ─── Floating bottom-right action badges ─────────────────────────────
   "floatingLink.deploy": "一键部署",
   "floatingLink.github": "GitHub",
+
+  // ─── Cloud landing page ──────────────────────────────────────────────
+  "cloud.title": "智能体平台",
+  "cloud.subtitle": "欢迎使用云端演示",
+  "cloud.intro": "这是云端托管的演示入口。你可以浏览产品能力，或获取完整代码与本地安装包，在本地运行私有化多智能体系统。",
+  "cloud.featureTitle": "功能亮点",
+  "cloud.feature.agentManagement": "智能体管理",
+  "cloud.feature.selfGrowth": "自我成长",
+  "cloud.feature.multiTurnChat": "多轮对话",
+  "cloud.feature.agentManagementDesc": "创建、编排、管理多个专项智能体，构建 1 主 N 从协作网络。",
+  "cloud.feature.selfGrowthDesc": "智能体可在运行中持续积累经验，优化提示词与执行策略。",
+  "cloud.feature.multiTurnChatDesc": "支持上下文记忆的多轮对话，复杂任务也能连续推进。",
+  "cloud.cloneTitle": "克隆仓库",
+  "cloud.cloneDescription": "通过 Git 获取完整源代码，本地自由二次开发。",
+  "cloud.copyButton": "复制",
+  "cloud.copied": "已复制",
+  "cloud.downloadTitle": "本地安装包",
+  "cloud.downloadDescription": "下载完整的本地安装包，无需配置环境即可开箱即用。",
+  "cloud.downloadButton": "下载本地安装包",
+  "cloud.quickStartTitle": "快速开始",
+  "cloud.quickStartDescription": "克隆仓库后，在终端执行以下命令即可启动本地服务。",
 } as const;
 
 export default zh;

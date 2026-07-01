@@ -18,6 +18,46 @@
 - **双重取消** —— 前端 `AbortController` + 后端 `AbortSignal`，可中途打断 LLM。
 - **后端拆两层** —— 有状态的长连接放 `agents/`，无状态的 `/history` 放 `cloud-functions/`。
 
+## 使用方式
+
+本模板支持两种使用方式：**云端模式** 和 **本地模式**。
+
+### 云端模式
+
+部署到 EdgeOne Makers。用户访问站点需先登录，登录后看到产品 Demo 和本地下载入口，可下载 `agent-local-package.zip`。
+
+[![Deploy to EdgeOne Makers](https://cdnstatic.tencentcs.com/edgeone/pages/deploy.svg)](https://console.cloud.tencent.com/edgeone/pages/new?template=openai-agents-starter-node)
+
+### 本地模式
+
+从 GitHub 克隆本仓库，或从云端部署页面下载 `agent-local-package.zip`。解压后安装依赖并启动本地开发服务器：
+
+```bash
+npm install
+npm run dev
+```
+
+登录后即可使用完整的 Agent 聊天与管理功能。
+
+### 环境变量配置
+
+复制 `.env.example` 为 `.env`，并填写必要配置：
+
+```bash
+cp .env.example .env
+```
+
+至少需要设置 `AI_GATEWAY_API_KEY` 和 `AI_GATEWAY_BASE_URL`。详见下方的 [环境变量](#环境变量) 章节。
+
+### 构建命令
+
+| 命令 | 说明 |
+|------|------|
+| `npm run dev` | 启动本地开发服务器 |
+| `npm run build` | 构建本地部署版本 |
+| `npm run build:cloud` | 构建 EdgeOne Makers 云端部署版本 |
+| `npm run package:local` | 生成用于本地安装的 `agent-local-package.zip` |
+
 ## 环境变量
 
 | 变量 | 必填 | 说明 |
@@ -25,6 +65,7 @@
 | `AI_GATEWAY_API_KEY` | 是 | 模型网关 API Key。可填 Makers Models 的 API Key，也可以是任意 OpenAI 兼容服务商的 Key。 |
 | `AI_GATEWAY_BASE_URL` | 是 | 网关 Base URL。Makers Models 请使用 `https://ai-gateway.edgeone.link/v1`。 |
 | `AI_GATEWAY_MODEL` | 否 | 模型 ID。默认 `@makers/deepseek-v4-flash`（内置免费模型）。 |
+| `VITE_APP_MODE` | 否 | 运行模式。`cloud` 显示登录、Demo 和本地下载入口；`local`（默认）启用完整聊天与管理功能。 |
 
 模板遵循 OpenAI 兼容协议，可以指向 Makers Models，也可以指向任意 OpenAI 兼容的服务商。
 
@@ -39,13 +80,15 @@
 
 ## 本地开发
 
-前置依赖：Node.js ≥ 18，已安装 EdgeOne CLI（`npm i -g edgeone`）。
+前置依赖：Node.js ≥ 18。
 
 ```bash
 npm install
 cp .env.example .env       # 然后填入 AI_GATEWAY_API_KEY / AI_GATEWAY_BASE_URL
-edgeone makers dev
+npm run dev
 ```
+
+如需本地开发 Makers Agents，也可安装 EdgeOne CLI（`npm i -g edgeone`）并运行 `edgeone makers dev`。
 
 本地观测面板：`http://localhost:8080/agent-metrics`。
 

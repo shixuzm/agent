@@ -18,6 +18,46 @@ A minimal, production-shaped starter that wires `@openai/agents` into EdgeOne Ma
 - **Dual cancellation** — frontend `AbortController` plus backend `AbortSignal` interrupts the LLM call mid-stream.
 - **Two-folder backend** — long-running stateful work in `agents/`, short stateless `/history` in `cloud-functions/`.
 
+## Usage
+
+This template supports two usage modes: **Cloud** and **Local**.
+
+### Cloud Mode
+
+Deploy to EdgeOne Makers. Visitors must log in before accessing the site. After logging in, they will see the product Demo and a local download entry for `agent-local-package.zip`.
+
+[![Deploy to EdgeOne Makers](https://cdnstatic.tencentcs.com/edgeone/pages/deploy.svg)](https://edgeone.ai/makers/new?template=openai-agents-starter-node&from=within&fromAgent=1&agentLang=typescript)
+
+### Local Mode
+
+Clone this repository from GitHub, or download `agent-local-package.zip` from the cloud deployment page. Unzip it, install dependencies, and start the local development server:
+
+```bash
+npm install
+npm run dev
+```
+
+After logging in, you can use the full agent chat and management features.
+
+### Environment Variables
+
+Copy `.env.example` to `.env` and fill in the required values:
+
+```bash
+cp .env.example .env
+```
+
+At minimum, set `AI_GATEWAY_API_KEY` and `AI_GATEWAY_BASE_URL`. See the [Environment Variables](#environment-variables) section below for details.
+
+### Build Commands
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start the local development server |
+| `npm run build` | Build the project for local deployment |
+| `npm run build:cloud` | Build the project for EdgeOne Makers cloud deployment |
+| `npm run package:local` | Generate `agent-local-package.zip` for local installation |
+
 ## Environment Variables
 
 | Variable | Required | Description |
@@ -25,6 +65,7 @@ A minimal, production-shaped starter that wires `@openai/agents` into EdgeOne Ma
 | `AI_GATEWAY_API_KEY` | Yes | Model gateway API key. Use your Makers Models API Key, or any OpenAI-compatible provider key. |
 | `AI_GATEWAY_BASE_URL` | Yes | Gateway base URL. For Makers Models, use `https://ai-gateway.edgeone.link/v1`. |
 | `AI_GATEWAY_MODEL` | No | Model ID. Defaults to `@makers/deepseek-v4-flash` (a free built-in model). |
+| `VITE_APP_MODE` | No | Runtime mode. `cloud` shows login, demo, and local download entry. `local` (default) enables full chat and management features. |
 
 This template follows the OpenAI-compatible standard — point these at Makers Models or any compatible provider.
 
@@ -39,13 +80,15 @@ The built-in `@makers/deepseek-v4-flash` model is free with a usage cap and is s
 
 ## Local Development
 
-Prerequisites: Node.js ≥ 18 and the EdgeOne CLI (`npm i -g edgeone`).
+Prerequisites: Node.js ≥ 18.
 
 ```bash
 npm install
 cp .env.example .env       # then fill in AI_GATEWAY_API_KEY / AI_GATEWAY_BASE_URL
-edgeone makers dev
+npm run dev
 ```
+
+To develop the Makers agents locally, you can also use the EdgeOne CLI (`npm i -g edgeone`) and run `edgeone makers dev`.
 
 Local agent metrics & traces are exposed at `http://localhost:8080/agent-metrics`.
 

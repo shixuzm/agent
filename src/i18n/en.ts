@@ -56,9 +56,40 @@ const en = {
   // Language toggle
   "lang.switch": "中文",
 
+  // Login
+  "login.title": "Account Login",
+  "login.username": "Username",
+  "login.usernamePlaceholder": "Enter your username",
+  "login.token": "Password / Token",
+  "login.tokenPlaceholder": "Enter password or token",
+  "login.submit": "Sign In",
+  "login.error.empty": "Please enter username and token",
+  "login.logout": "Log out",
+
   // ─── Floating bottom-right action badges ─────────────────────────────
   "floatingLink.deploy": "Deploy",
   "floatingLink.github": "GitHub",
+
+  // ─── Cloud landing page ──────────────────────────────────────────────
+  "cloud.title": "Agent Platform",
+  "cloud.subtitle": "Welcome to the cloud demo",
+  "cloud.intro": "This is the cloud-hosted demo entry. Explore the capabilities, or grab the full source code and local package to run a private multi-agent system on your machine.",
+  "cloud.featureTitle": "Highlights",
+  "cloud.feature.agentManagement": "Agent Management",
+  "cloud.feature.selfGrowth": "Self Growth",
+  "cloud.feature.multiTurnChat": "Multi-turn Chat",
+  "cloud.feature.agentManagementDesc": "Create, orchestrate, and manage specialist agents to build a 1-master-N-worker collaboration network.",
+  "cloud.feature.selfGrowthDesc": "Agents continuously accumulate experience and refine prompts and execution strategies at runtime.",
+  "cloud.feature.multiTurnChatDesc": "Context-aware multi-turn conversations keep complex tasks moving forward smoothly.",
+  "cloud.cloneTitle": "Clone Repository",
+  "cloud.cloneDescription": "Get the full source code via Git and customize it locally.",
+  "cloud.copyButton": "Copy",
+  "cloud.copied": "Copied",
+  "cloud.downloadTitle": "Local Package",
+  "cloud.downloadDescription": "Download the full local package and get started without any environment setup.",
+  "cloud.downloadButton": "Download Local Package",
+  "cloud.quickStartTitle": "Quick Start",
+  "cloud.quickStartDescription": "After cloning, run the following commands in your terminal to start the local service.",
 } as const;
 
 export default en;
