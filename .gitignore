@@ -4,6 +4,14 @@ node_modules/
 
 # Build outputs
 dist/
+electron-dist/
+release/
+
+# Mobile / hybrid platform build outputs (source under native folders is tracked
+# only where needed; raw build artifacts are excluded)
+android/
+ios/
+harmony/entry/src/main/resources/rawfile/
 
 # EdgeOne generated files
 .edgeone/

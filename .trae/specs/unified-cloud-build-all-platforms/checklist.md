@@ -1,0 +1,23 @@
+# Checklist
+
+- [x] `electron/main.ts` 已创建，可加载前端产物并启动桌面应用
+- [x] `electron/preload.ts` 已创建，暴露安全 IPC 接口
+- [x] `electron/config.ts` 已实现桌面端配置持久化（electron-store）
+- [x] 桌面端配置通过 `setEnvProvider` 注入到 shared 模块
+- [x] `package.json` 中已添加 `build:desktop`、`build:win`、`build:mac`、`build:linux` 脚本
+- [x] `electron-builder` 已配置产物格式（nsis/dmg/AppImage）
+- [x] `.env.example` 仅保留构建期 `VITE_*` 变量，无运行时变量
+- [x] `shared/` 模块不依赖 `process.env` 作为运行时配置源
+- [x] `docs/modules.md` 已创建，描述各模块职责和技术栈
+- [x] `.github/workflows/build-all.yml` 已创建，定义全平台构建矩阵
+- [x] CI/CD 工作流包含 Web、Android、桌面三平台、鸿蒙构建 job
+- [x] CI/CD 触发条件为 push tag `v*` 或手动 dispatch
+- [x] CI/CD 产物上传到 GitHub Releases
+- [x] README.md 已更新桌面端使用说明和云端构建说明
+- [x] README_zh-CN.md 已同步更新
+- [x] `.gitignore` 已排除 `android/`、`ios/`、`harmony/` 构建产物
+- [x] `npx tsc --noEmit` 无类型错误
+- [x] `npm run build` Web 构建成功
+- [x] `npm run build:desktop` Electron 构建成功
+- [x] `npm run build:android` Android 同步成功
+- [x] `npm run build:harmony` 鸿蒙产物生成

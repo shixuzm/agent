@@ -123,6 +123,31 @@ npm run build:ios
 npm run build:harmony
 ```
 
+## 构建桌面端应用
+
+桌面端应用（Windows、macOS、Linux）使用 Electron 构建。
+
+```bash
+# 构建当前系统对应的桌面应用
+npm run build:desktop
+
+# 构建指定平台
+npm run build:win    # Windows (.exe)
+npm run build:mac    # macOS (.dmg)
+npm run build:linux  # Linux (.AppImage)
+```
+
+## 云端 CI/CD
+
+所有平台构建已通过 GitHub Actions 自动化。推送 tag 即可触发：
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+将自动构建 Web、Android、iOS、鸿蒙、Windows、macOS、Linux 全平台产物，并上传到 GitHub Releases。
+
 ## 项目结构
 
 ```text

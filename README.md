@@ -123,6 +123,32 @@ npm run build:ios
 npm run build:harmony
 ```
 
+## Build Desktop Apps
+
+Desktop applications for Windows, macOS, and Linux are built with Electron.
+
+```bash
+# Build all desktop platforms (auto-detect current OS)
+npm run build:desktop
+
+# Build for specific platform
+npm run build:win    # Windows (.exe)
+npm run build:mac    # macOS (.dmg)
+npm run build:linux  # Linux (.AppImage)
+```
+
+## Cloud CI/CD
+
+All platform builds are automated via GitHub Actions. Push a tag to trigger:
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+This triggers builds for Web, Android, iOS, HarmonyOS, Windows, macOS, and Linux.
+Artifacts are uploaded to GitHub Releases automatically.
+
 ## Project Structure
 
 ```text
