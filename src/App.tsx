@@ -23,6 +23,7 @@ import ConversationSidebar from './components/ConversationSidebar';
 import GitHubLink from './components/GitHubLink';
 import DeployLink from './components/DeployLink';
 import { GrowthPanel } from './components/GrowthPanel';
+import { AgentsPanel } from './components/AgentsPanel';
 import { I18nProvider, LangToggle, useT, MessageKeys } from './i18n';
 import { deleteSnapshot, loadSnapshot, saveSnapshot } from './lib/chatUiStore';
 import styles from './App.module.css';
@@ -119,6 +120,7 @@ function AppInner() {
   const [agents, setAgents] = useState<AgentDefinition[]>([]);
   const [selectedAgentId, setSelectedAgentId] = useState<string>('');
   const [showGrowthPanel, setShowGrowthPanel] = useState(false);
+  const [showAgentsPanel, setShowAgentsPanel] = useState(false);
 
   const botMsgIdRef = useRef<string>('');
   const abortCtrlRef = useRef<AbortController | null>(null);
@@ -622,6 +624,13 @@ function AppInner() {
             </div>
             <button
               className={styles.growthBtn}
+              onClick={() => setShowAgentsPanel(true)}
+              title="智能体管理"
+            >
+              🤖 智能体
+            </button>
+            <button
+              className={styles.growthBtn}
               onClick={() => setShowGrowthPanel(true)}
               title="智能体成长轨迹"
             >
@@ -651,6 +660,12 @@ function AppInner() {
       </div>
       {showGrowthPanel && (
         <GrowthPanel onClose={() => setShowGrowthPanel(false)} />
+      )}
+      {showAgentsPanel && (
+        <AgentsPanel
+          onClose={() => setShowAgentsPanel(false)}
+          onAgentsChanged={() => void listAgents().then(setAgents)}
+        />
       )}
       <GitHubLink />
       <DeployLink />

@@ -364,6 +364,36 @@ export async function listSkills(): Promise<SkillDefinition[]> {
   }
 }
 
+/** Create or update an agent. */
+export async function saveAgent(agent: AgentDefinition): Promise<AgentDefinition | null> {
+  try {
+    const res = await fetch(API.agents, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'save', skill: undefined, agent }),
+    });
+    if (!res.ok) return null;
+    const data = (await res.json().catch(() => null)) as { agent?: AgentDefinition } | null;
+    return data?.agent ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** Delete an agent. Built-in agents cannot be deleted. */
+export async function deleteAgent(id: string): Promise<boolean> {
+  try {
+    const res = await fetch(API.agents, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'delete', id }),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
 /** List reflections, optionally filtered by agent. */
 export async function listReflections(agentId?: string) {
   try {
