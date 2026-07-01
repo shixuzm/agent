@@ -1,12 +1,14 @@
 const zh = {
   // Header
-  "app.title": "OpenAI Agents Starter",
-  "app.subtitle": "基于 EdgeOne Makers 运行，支持会话记忆和 Agent 工具",
+  "app.title": "AI 多智能体系统",
+  "app.subtitle": "基于 EdgeOne Makers 运行，支持多智能体协作与技能编排",
+  "agent.selector": "选择智能体",
+  "agent.auto": "自动调度",
 
   // Empty state
-  "empty.title": "OpenAI Agents Starter",
-  "empty.hint": "我是运行在 EdgeOne 上的 OpenAI Agent，拥有自定义工具和会话记忆。我可以帮助你查询天气、穿衣建议、翻译和文本统计。",
-  "empty.features": "EdgeOne Store · 会话记忆 · Agent 工具",
+  "empty.title": "AI 多智能体系统",
+  "empty.hint": "我是主智能体，可协调代码、写作、研究、审核等专项智能体为你服务。输入任务后我会自动选择最合适的智能体处理。",
+  "empty.features": "多智能体调度 · 技能编排 · 会话记忆",
 
   // Chat input
   "chat.placeholder": "输入消息...  ⏎ 发送 · Shift+⏎ 换行",

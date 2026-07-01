@@ -26,6 +26,7 @@
  */
 
 import { createLogger } from '../_logger';
+import { getStore } from '../../shared/store';
 
 const logger = createLogger('conversations');
 
@@ -299,7 +300,28 @@ export async function onRequestPost(context: any): Promise<Response> {
       }));
     }
 
-    const normalized = firstPass.map(entry => entry.normalized);
+    let normalized = firstPass.map(entry => entry.normalized);
+
+    // Merge conversations from our in-memory multi-agent store
+    try {
+      const ourConversations = getStore().listConversations(userId);
+      const existingIds = new Set(normalized.map(c => c.id));
+      for (const conv of ourConversations) {
+        if (existingIds.has(conv.id)) continue;
+        const firstUserMsg = conv.messages.find(m => m.role === 'user')?.content ?? '';
+        normalized.push({
+          id: conv.id,
+          title: buildTitleFromFirstMessage(firstUserMsg),
+          preview: conv.messages[conv.messages.length - 1]?.content,
+          lastMessageAt: conv.updatedAt,
+          createdAt: conv.createdAt,
+          userId,
+          messageCount: conv.messages.length,
+        });
+      }
+    } catch (e) {
+      logger.error('[conversations] failed to merge multi-agent store:', e);
+    }
 
     // Dedupe by id — the user_conversation_index can carry multiple
     // entries for the same conversationId (one per appended user message,

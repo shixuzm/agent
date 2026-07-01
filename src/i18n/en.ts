@@ -1,12 +1,14 @@
 const en = {
   // Header
-  "app.title": "OpenAI Agents Starter",
-  "app.subtitle": "Running on EdgeOne Makers with session memory & Agent Tools",
+  "app.title": "AI Multi-Agent System",
+  "app.subtitle": "Running on EdgeOne Makers with multi-agent collaboration & skill orchestration",
+  "agent.selector": "Select Agent",
+  "agent.auto": "Auto Route",
 
   // Empty state
-  "empty.title": "OpenAI Agents Starter",
-  "empty.hint": "I'm an OpenAI Agent running on EdgeOne with custom tools and session memory. I can help with weather, clothing advice, translation, and text statistics.",
-  "empty.features": "EdgeOne Store · Session Memory · Agent Tools",
+  "empty.title": "AI Multi-Agent System",
+  "empty.hint": "I'm the Super Agent. I coordinate specialist agents for coding, writing, research, and review. Just describe your task and I'll route it to the best agent.",
+  "empty.features": "Multi-Agent Routing · Skill Orchestration · Session Memory",
 
   // Chat input
   "chat.placeholder": "Type a message...  ⏎ Send · Shift+⏎ Newline",

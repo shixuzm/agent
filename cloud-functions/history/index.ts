@@ -22,6 +22,8 @@
  */
 
 import { createLogger } from '../_logger';
+import { getStore } from '../../shared/store';
+import type { Message as StoreMessage } from '../../shared/types';
 
 const logger = createLogger('history');
 
@@ -191,6 +193,28 @@ export async function onRequestPost(context: any): Promise<Response> {
   }
 
   try {
+    // First try our in-memory multi-agent store (used by /chat orchestrator)
+    const ourStore = getStore();
+    const conversation = ourStore.getConversation(conversationId);
+    if (conversation && conversation.messages.length > 0) {
+      const messages = conversation.messages
+        .filter((m): m is StoreMessage & { role: 'user' | 'assistant' } => m.role === 'user' || m.role === 'assistant')
+        .map(m => ({
+          id: m.id,
+          role: m.role,
+          content: m.content,
+          timestamp: m.timestamp,
+          agentId: m.agentId,
+          agentName: m.agentName,
+          agentReasoning: m.agentReasoning,
+        }));
+      logger.log(
+        `[history] end: ${new Date().toISOString()}, total: ${Date.now() - requestStartTime}ms (from multi-agent store: ${messages.length})`,
+      );
+      return jsonResponse({ conversation_id: conversationId, messages });
+    }
+
+    // Fallback to Makers built-in store (used by SDK-based agents)
     const storeStartTime = Date.now();
     logger.log(`[history] store.getMessages start: ${new Date(storeStartTime).toISOString()}`);
 

@@ -3,6 +3,7 @@ import type {
   Message,
   ToolLampState,
   ConversationSummary,
+  AgentDefinition,
 } from './types';
 import {
   fetchConversationHistory,
@@ -10,6 +11,7 @@ import {
   stopAgent,
   listConversations,
   deleteConversation,
+  listAgents,
 } from './api';
 import type { RawSseEvent } from './api';
 import ToolIndicators from './components/ToolIndicators';
@@ -112,6 +114,10 @@ function AppInner() {
   const [nextCursor, setNextCursor] = useState<string | undefined>(undefined);
   const [activeConversationId, setActiveConversationId] = useState<string>(() => getOrCreateConversationId());
 
+  // Agent selection state
+  const [agents, setAgents] = useState<AgentDefinition[]>([]);
+  const [selectedAgentId, setSelectedAgentId] = useState<string>('');
+
   const botMsgIdRef = useRef<string>('');
   const abortCtrlRef = useRef<AbortController | null>(null);
   const hadExistingConversationIdRef = useRef(getExistingConversationId() !== null);
@@ -134,6 +140,11 @@ function AppInner() {
       }))
     );
   }, [t]);
+
+  // Load available agents
+  useEffect(() => {
+    void listAgents().then(setAgents);
+  }, []);
 
   // Persist a UI snapshot of the current conversation's messages to IndexedDB
   // (debounced) so a refresh restores instantly without hitting /history.
@@ -366,6 +377,16 @@ function AppInner() {
         }, 1000);
       },
 
+      onAgentSelected(event) {
+        setMessages(prev =>
+          prev.map(m =>
+            m.id === botMsgIdRef.current
+              ? { ...m, agentId: event.agentId, agentName: event.agentName, agentReasoning: event.reasoning }
+              : m
+          )
+        );
+      },
+
       onRawEvent(event) {
         // Every backend SSE frame flows through here, so this is the cheapest
         // hook for "first byte from backend".
@@ -414,10 +435,11 @@ function AppInner() {
       userId: eoUuidRef.current,
       userMsgId: userMsg.id,
       botMsgId,
+      agentId: selectedAgentId || undefined,
     });
 
     abortCtrlRef.current = ctrl;
-  }, [updateBotMessage, clearBotStreaming, finishStream, refreshConversations, t]);
+  }, [updateBotMessage, clearBotStreaming, finishStream, refreshConversations, t, selectedAgentId]);
 
   const handleClearHistory = useCallback(() => {
     const oldConvId = conversationIdRef.current;
@@ -579,6 +601,22 @@ function AppInner() {
                 <p className={styles.title}>{t("app.title")}</p>
                 <p className={styles.subtitle}>{t("app.subtitle")}</p>
               </div>
+            </div>
+            <div className={styles.headerCenter}>
+              <select
+                className={styles.agentSelect}
+                value={selectedAgentId}
+                onChange={(e) => setSelectedAgentId(e.target.value)}
+                aria-label={t('agent.selector')}
+                title={t('agent.selector')}
+              >
+                <option value="">{t('agent.auto')}</option>
+                {agents.map((agent) => (
+                  <option key={agent.id} value={agent.id}>
+                    {agent.avatar ? `${agent.avatar} ` : ''}{agent.name}
+                  </option>
+                ))}
+              </select>
             </div>
             <ToolIndicators lamps={lamps} />
           </header>

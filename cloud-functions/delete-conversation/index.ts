@@ -21,6 +21,7 @@
  */
 
 import { createLogger } from '../_logger';
+import { getStore } from '../../shared/store';
 
 const logger = createLogger('delete-conversation');
 
@@ -72,6 +73,13 @@ export async function onRequestPost(context: any): Promise<Response> {
     const args: Record<string, unknown> = { conversationId };
     if (userId) args.userId = userId;
     await store.deleteConversation(args);
+
+    // Also delete from our in-memory multi-agent store
+    try {
+      getStore().deleteConversation(conversationId);
+    } catch (e2) {
+      logger.error('[delete-conversation] failed to delete from multi-agent store:', e2);
+    }
 
     logger.log(`[delete-conversation] end: ${new Date().toISOString()}, total: ${Date.now() - startTime}ms`);
     return jsonResponse({ status: 'ok', conversation_id: conversationId });

@@ -8,6 +8,8 @@
  *   cloud-functions/conversations/index.ts       → POST /conversations         List conversations for a user
  *   cloud-functions/clear-history/index.ts       → POST /clear-history         Clear messages of one conversation
  *   cloud-functions/delete-conversation/index.ts → POST /delete-conversation   Permanently delete a conversation
+ *   cloud-functions/agents/index.ts              → GET/POST /agents            Agent management
+ *   cloud-functions/skills/index.ts              → GET/POST /skills            Skill management
  *
  * This file defines all API paths and request wrappers.
  */
@@ -16,6 +18,8 @@ import type {
   Message,
   ListConversationsParams,
   ListConversationsResponse,
+  AgentDefinition,
+  SkillDefinition,
 } from './types';
 
 export const API = {
@@ -25,6 +29,8 @@ export const API = {
   clearHistory: '/clear-history',           // Clear messages in a conversation
   conversations: '/conversations',          // List conversations for a user
   deleteConversation: '/delete-conversation', // Permanently delete a conversation
+  agents: '/agents',                        // Agent management
+  skills: '/skills',                        // Skill management
 } as const;
 
 export interface RawSseEvent {
@@ -34,9 +40,16 @@ export interface RawSseEvent {
   timestamp: number;
 }
 
+export interface AgentSelectedEvent {
+  agentId: string;
+  agentName: string;
+  reasoning: string;
+}
+
 export interface StreamCallbacks {
   onTextDelta: (delta: string) => void;
   onToolCalled: (toolName: string) => void;
+  onAgentSelected?: (event: AgentSelectedEvent) => void;
   onDone: () => void;
   onError: (err: Error) => void;
   onRawEvent?: (event: RawSseEvent) => void;
@@ -81,7 +94,7 @@ export async function fetchConversationHistory(
 
 /**
  * Stream POST /chat via SSE
- * Backend pushes events: text_delta / tool_called / done / error
+ * Backend pushes events: agent_selected / text_delta / tool_called / done / error
  *
  * Returns an AbortController the caller can use to abort (or pair with /chat/stop for graceful abort).
  */
@@ -89,7 +102,7 @@ export function sendMessageStream(
   message: string,
   callbacks: StreamCallbacks,
   conversationId?: string,
-  options?: { userId?: string; userMsgId?: string; botMsgId?: string },
+  options?: { userId?: string; userMsgId?: string; botMsgId?: string; agentId?: string },
 ): AbortController {
   const ctrl = new AbortController();
 
@@ -107,12 +120,10 @@ export function sendMessageStream(
         headers,
         body: JSON.stringify({
           message,
-          // userId is camelCase here for parity with claude-agent-starter's
-          // chat handler convention. The backend reads body.userId ?? body.user_id
-          // to be tolerant of both.
           userId: options?.userId,
           userMsgId: options?.userMsgId,
           botMsgId: options?.botMsgId,
+          agentId: options?.agentId,
         }),
         signal: ctrl.signal,
       });
@@ -197,6 +208,11 @@ function dispatchSseChunk(part: string, cb: StreamCallbacks, markDone: () => voi
       case 'tool_called':
         cb.onToolCalled(parsed.tool);
         break;
+      case 'agent_selected':
+        if (cb.onAgentSelected) {
+          cb.onAgentSelected(parsed as AgentSelectedEvent);
+        }
+        break;
       case 'error':
         cb.onError(new Error(parsed.message || 'agent returned error'));
         break;
@@ -219,25 +235,9 @@ function dispatchSseChunk(part: string, cb: StreamCallbacks, markDone: () => voi
 
 /**
  * Request the backend to abort the currently running agent
- *
- * Note: the stop request header must NOT carry the same conversation_id as chat,
- * otherwise the runtime will overwrite chat's cancel_event with stop's cancel_event,
- * causing abort_active_run to fail. The target conversation_id is passed only via body.
  */
 export async function stopAgent(conversationId?: string): Promise<boolean> {
   try {
-    /**
-     * EdgeOne agents/ runtime requires Markers-Conversation-Id on every
-     * agents/* request (since 2026-06-05 platform upgrade) — without it
-     * the runtime returns 400 (`AGENT_CONVERSATION_ID_REQUIRED`) before
-     * the handler runs.
-     *
-     * Earlier comments in this codebase warned that adding the header on
-     * /stop would overwrite chat's abort signal slot. The new runtime is
-     * expected to no longer have that bug; if you observe stop succeeding
-     * but chat not actually aborting, revisit this and use a different
-     * cancellation channel.
-     */
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
@@ -276,7 +276,6 @@ export async function clearConversationHistory(
 
 /**
  * List conversations for the given user (eo-uuid).
- * Returns at most `limit` (default 20) conversations ordered by lastMessageAt desc by default.
  */
 export async function listConversations(
   params: ListConversationsParams,
@@ -335,5 +334,29 @@ export async function deleteConversation(
     return res.ok;
   } catch {
     return false;
+  }
+}
+
+/** List all agents. */
+export async function listAgents(): Promise<AgentDefinition[]> {
+  try {
+    const res = await fetch(API.agents, { method: 'GET' });
+    if (!res.ok) return [];
+    const data = (await res.json().catch(() => null)) as { agents?: AgentDefinition[] } | null;
+    return data?.agents ?? [];
+  } catch {
+    return [];
+  }
+}
+
+/** List all skills. */
+export async function listSkills(): Promise<SkillDefinition[]> {
+  try {
+    const res = await fetch(API.skills, { method: 'GET' });
+    if (!res.ok) return [];
+    const data = (await res.json().catch(() => null)) as { skills?: SkillDefinition[] } | null;
+    return data?.skills ?? [];
+  } catch {
+    return [];
   }
 }
