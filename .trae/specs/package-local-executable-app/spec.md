@@ -61,3 +61,256 @@ The system SHALL 允许后端服务从 Electron 主进程传入的配置对象�
 
 ## REMOVED Requirements
 无。
+# 移动端应用# 移动端应用打包：Android / iOS / 鸿蒙# 移动端应用打包：Android / iOS / 鸿蒙 Spec
+
+## Why
+当前项目以 Web# 移动端应用打包：Android / iOS / 鸿蒙 Spec
+
+## Why
+当前项目以 Web 站点和源码压缩包形式交付，用户需要解压、安装依赖、配置环境变量并手动启动服务。为了降低使用门槛，需要将# 移动端应用打包：Android / iOS / 鸿蒙 Spec
+
+## Why
+当前项目以 Web 站点和源码压缩包形式交付，用户需要解压、安装依赖、配置环境变量并手动启动服务。为了降低使用门槛，需要将同一套前端能力打包为 Android、iOS 和鸿蒙可执行应用；用户只需# 移动端应用打包：Android / iOS / 鸿蒙 Spec
+
+## Why
+当前项目以 Web 站点和源码压缩包形式交付，用户需要解压、安装依赖、配置环境变量并手动启动服务。为了降低使用门槛，需要将同一套前端能力打包为 Android、iOS 和鸿蒙可执行应用；用户只需安装 App，在设置页面填写 API 信息# 移动端应用打包：Android / iOS / 鸿蒙 Spec
+
+## Why
+当前项目以 Web 站点和源码压缩包形式交付，用户需要解压、安装依赖、配置环境变量并手动启动服务。为了降低使用门槛，需要将同一套前端能力打包为 Android、iOS 和鸿蒙可执行应用；用户只需安装 App，在设置页面填写 API 信息即可使用，无需任何环境变量或服务器部署。
+
+## What Changes
+- 使用 Capacitor 将现有 Vite + React 前端打包为 Android 和 iOS# 移动端应用打包：Android / iOS / 鸿蒙 Spec
+
+## Why
+当前项目以 Web 站点和源码压缩包形式交付，用户需要解压、安装依赖、配置环境变量并手动启动服务。为了降低使用门槛，需要将同一套前端能力打包为 Android、iOS 和鸿蒙可执行应用；用户只需安装 App，在设置页面填写 API 信息即可使用，无需任何环境变量或服务器部署。
+
+## What Changes
+- 使用 Capacitor 将现有 Vite + React 前端打包为 Android 和 iOS 应用。
+- 使用鸿蒙 ArkWeb# 移动端应用打包：Android / iOS / 鸿蒙 Spec
+
+## Why
+当前项目以 Web 站点和源码压缩包形式交付，用户需要解压、安装依赖、配置环境变量并手动启动服务。为了降低使用门槛，需要将同一套前端能力打包为 Android、iOS 和鸿蒙可执行应用；用户只需安装 App，在设置页面填写 API 信息即可使用，无需任何环境变量或服务器部署。
+
+## What Changes
+- 使用 Capacitor 将现有 Vite + React 前端打包为 Android 和 iOS 应用。
+- 使用鸿蒙 ArkWeb 创建一个极简鸿蒙原生应用，加载同一套 Web 资源，实现 HarmonyOS 支持# 移动端应用打包：Android / iOS / 鸿蒙 Spec
+
+## Why
+当前项目以 Web 站点和源码压缩包形式交付，用户需要解压、安装依赖、配置环境变量并手动启动服务。为了降低使用门槛，需要将同一套前端能力打包为 Android、iOS 和鸿蒙可执行应用；用户只需安装 App，在设置页面填写 API 信息即可使用，无需任何环境变量或服务器部署。
+
+## What Changes
+- 使用 Capacitor 将现有 Vite + React 前端打包为 Android 和 iOS 应用。
+- 使用鸿蒙 ArkWeb 创建一个极简鸿蒙原生应用，加载同一套 Web 资源，实现 HarmonyOS 支持。
+- 新增应用内设置页面，支持配置 LLM API Key、Base URL、# 移动端应用打包：Android / iOS / 鸿蒙 Spec
+
+## Why
+当前项目以 Web 站点和源码压缩包形式交付，用户需要解压、安装依赖、配置环境变量并手动启动服务。为了降低使用门槛，需要将同一套前端能力打包为 Android、iOS 和鸿蒙可执行应用；用户只需安装 App，在设置页面填写 API 信息即可使用，无需任何环境变量或服务器部署。
+
+## What Changes
+- 使用 Capacitor 将现有 Vite + React 前端打包为 Android 和 iOS 应用。
+- 使用鸿蒙 ArkWeb 创建一个极简鸿蒙原生应用，加载同一套 Web 资源，实现 HarmonyOS 支持。
+- 新增应用内设置页面，支持配置 LLM API Key、Base URL、Model、DSpark Endpoint、DSpark API Key 等。
+- 使用 Capacitor# 移动端应用打包：Android / iOS / 鸿蒙 Spec
+
+## Why
+当前项目以 Web 站点和源码压缩包形式交付，用户需要解压、安装依赖、配置环境变量并手动启动服务。为了降低使用门槛，需要将同一套前端能力打包为 Android、iOS 和鸿蒙可执行应用；用户只需安装 App，在设置页面填写 API 信息即可使用，无需任何环境变量或服务器部署。
+
+## What Changes
+- 使用 Capacitor 将现有 Vite + React 前端打包为 Android 和 iOS 应用。
+- 使用鸿蒙 ArkWeb 创建一个极简鸿蒙原生应用，加载同一套 Web 资源，实现 HarmonyOS 支持。
+- 新增应用内设置页面，支持配置 LLM API Key、Base URL、Model、DSpark Endpoint、DSpark API Key 等。
+- 使用 Capacitor Preferences（Android/iOS）与 localStorage（# 移动端应用打包：Android / iOS / 鸿蒙 Spec
+
+## Why
+当前项目以 Web 站点和源码压缩包形式交付，用户需要解压、安装依赖、配置环境变量并手动启动服务。为了降低使用门槛，需要将同一套前端能力打包为 Android、iOS 和鸿蒙可执行应用；用户只需安装 App，在设置页面填写 API 信息即可使用，无需任何环境变量或服务器部署。
+
+## What Changes
+- 使用 Capacitor 将现有 Vite + React 前端打包为 Android 和 iOS 应用。
+- 使用鸿蒙 ArkWeb 创建一个极简鸿蒙原生应用，加载同一套 Web 资源，实现 HarmonyOS 支持。
+- 新增应用内设置页面，支持配置 LLM API Key、Base URL、Model、DSpark Endpoint、DSpark API Key 等。
+- 使用 Capacitor Preferences（Android/iOS）与 localStorage（鸿蒙 fallback）持久化配置。
+- 新增打包脚本 `npm run package:android# 移动端应用打包：Android / iOS / 鸿蒙 Spec
+
+## Why
+当前项目以 Web 站点和源码压缩包形式交付，用户需要解压、安装依赖、配置环境变量并手动启动服务。为了降低使用门槛，需要将同一套前端能力打包为 Android、iOS 和鸿蒙可执行应用；用户只需安装 App，在设置页面填写 API 信息即可使用，无需任何环境变量或服务器部署。
+
+## What Changes
+- 使用 Capacitor 将现有 Vite + React 前端打包为 Android 和 iOS 应用。
+- 使用鸿蒙 ArkWeb 创建一个极简鸿蒙原生应用，加载同一套 Web 资源，实现 HarmonyOS 支持。
+- 新增应用内设置页面，支持配置 LLM API Key、Base URL、Model、DSpark Endpoint、DSpark API Key 等。
+- 使用 Capacitor Preferences（Android/iOS）与 localStorage（鸿蒙 fallback）持久化配置。
+- 新增打包脚本 `npm run package:android`、`npm run package:ios`、`npm run package# 移动端应用打包：Android / iOS / 鸿蒙 Spec
+
+## Why
+当前项目以 Web 站点和源码压缩包形式交付，用户需要解压、安装依赖、配置环境变量并手动启动服务。为了降低使用门槛，需要将同一套前端能力打包为 Android、iOS 和鸿蒙可执行应用；用户只需安装 App，在设置页面填写 API 信息即可使用，无需任何环境变量或服务器部署。
+
+## What Changes
+- 使用 Capacitor 将现有 Vite + React 前端打包为 Android 和 iOS 应用。
+- 使用鸿蒙 ArkWeb 创建一个极简鸿蒙原生应用，加载同一套 Web 资源，实现 HarmonyOS 支持。
+- 新增应用内设置页面，支持配置 LLM API Key、Base URL、Model、DSpark Endpoint、DSpark API Key 等。
+- 使用 Capacitor Preferences（Android/iOS）与 localStorage（鸿蒙 fallback）持久化配置。
+- 新增打包脚本 `npm run package:android`、`npm run package:ios`、`npm run package:harmony`，输出各平台可执行包。
+- 更新 `README.md`，说明# 移动端应用打包：Android / iOS / 鸿蒙 Spec
+
+## Why
+当前项目以 Web 站点和源码压缩包形式交付，用户需要解压、安装依赖、配置环境变量并手动启动服务。为了降低使用门槛，需要将同一套前端能力打包为 Android、iOS 和鸿蒙可执行应用；用户只需安装 App，在设置页面填写 API 信息即可使用，无需任何环境变量或服务器部署。
+
+## What Changes
+- 使用 Capacitor 将现有 Vite + React 前端打包为 Android 和 iOS 应用。
+- 使用鸿蒙 ArkWeb 创建一个极简鸿蒙原生应用，加载同一套 Web 资源，实现 HarmonyOS 支持。
+- 新增应用内设置页面，支持配置 LLM API Key、Base URL、Model、DSpark Endpoint、DSpark API Key 等。
+- 使用 Capacitor Preferences（Android/iOS）与 localStorage（鸿蒙 fallback）持久化配置。
+- 新增打包脚本 `npm run package:android`、`npm run package:ios`、`npm run package:harmony`，输出各平台可执行包。
+- 更新 `README.md`，说明下载安装 App、在设置中配置 API 即可使用。
+
+## Impact
+- A# 移动端应用打包：Android / iOS / 鸿蒙 Spec
+
+## Why
+当前项目以 Web 站点和源码压缩包形式交付，用户需要解压、安装依赖、配置环境变量并手动启动服务。为了降低使用门槛，需要将同一套前端能力打包为 Android、iOS 和鸿蒙可执行应用；用户只需安装 App，在设置页面填写 API 信息即可使用，无需任何环境变量或服务器部署。
+
+## What Changes
+- 使用 Capacitor 将现有 Vite + React 前端打包为 Android 和 iOS 应用。
+- 使用鸿蒙 ArkWeb 创建一个极简鸿蒙原生应用，加载同一套 Web 资源，实现 HarmonyOS 支持。
+- 新增应用内设置页面，支持配置 LLM API Key、Base URL、Model、DSpark Endpoint、DSpark API Key 等。
+- 使用 Capacitor Preferences（Android/iOS）与 localStorage（鸿蒙 fallback）持久化配置。
+- 新增打包脚本 `npm run package:android`、`npm run package:ios`、`npm run package:harmony`，输出各平台可执行包。
+- 更新 `README.md`，说明下载安装 App、在设置中配置 API 即可使用。
+
+## Impact
+- Affected specs: 本地交付形态、配置管理# 移动端应用打包：Android / iOS / 鸿蒙 Spec
+
+## Why
+当前项目以 Web 站点和源码压缩包形式交付，用户需要解压、安装依赖、配置环境变量并手动启动服务。为了降低使用门槛，需要将同一套前端能力打包为 Android、iOS 和鸿蒙可执行应用；用户只需安装 App，在设置页面填写 API 信息即可使用，无需任何环境变量或服务器部署。
+
+## What Changes
+- 使用 Capacitor 将现有 Vite + React 前端打包为 Android 和 iOS 应用。
+- 使用鸿蒙 ArkWeb 创建一个极简鸿蒙原生应用，加载同一套 Web 资源，实现 HarmonyOS 支持。
+- 新增应用内设置页面，支持配置 LLM API Key、Base URL、Model、DSpark Endpoint、DSpark API Key 等。
+- 使用 Capacitor Preferences（Android/iOS）与 localStorage（鸿蒙 fallback）持久化配置。
+- 新增打包脚本 `npm run package:android`、`npm run package:ios`、`npm run package:harmony`，输出各平台可执行包。
+- 更新 `README.md`，说明下载安装 App、在设置中配置 API 即可使用。
+
+## Impact
+- Affected specs: 本地交付形态、配置管理、前端设置、构建脚本、项目文档。
+- Affected code: 新增 `capacitor.config.ts`、Android/iOS# 移动端应用打包：Android / iOS / 鸿蒙 Spec
+
+## Why
+当前项目以 Web 站点和源码压缩包形式交付，用户需要解压、安装依赖、配置环境变量并手动启动服务。为了降低使用门槛，需要将同一套前端能力打包为 Android、iOS 和鸿蒙可执行应用；用户只需安装 App，在设置页面填写 API 信息即可使用，无需任何环境变量或服务器部署。
+
+## What Changes
+- 使用 Capacitor 将现有 Vite + React 前端打包为 Android 和 iOS 应用。
+- 使用鸿蒙 ArkWeb 创建一个极简鸿蒙原生应用，加载同一套 Web 资源，实现 HarmonyOS 支持。
+- 新增应用内设置页面，支持配置 LLM API Key、Base URL、Model、DSpark Endpoint、DSpark API Key 等。
+- 使用 Capacitor Preferences（Android/iOS）与 localStorage（鸿蒙 fallback）持久化配置。
+- 新增打包脚本 `npm run package:android`、`npm run package:ios`、`npm run package:harmony`，输出各平台可执行包。
+- 更新 `README.md`，说明下载安装 App、在设置中配置 API 即可使用。
+
+## Impact
+- Affected specs: 本地交付形态、配置管理、前端设置、构建脚本、项目文档。
+- Affected code: 新增 `capacitor.config.ts`、Android/iOS 平台目录、鸿蒙工程目录、`src/pages/Settings.tsx`、设置相关 UI；修改# 移动端应用打包：Android / iOS / 鸿蒙 Spec
+
+## Why
+当前项目以 Web 站点和源码压缩包形式交付，用户需要解压、安装依赖、配置环境变量并手动启动服务。为了降低使用门槛，需要将同一套前端能力打包为 Android、iOS 和鸿蒙可执行应用；用户只需安装 App，在设置页面填写 API 信息即可使用，无需任何环境变量或服务器部署。
+
+## What Changes
+- 使用 Capacitor 将现有 Vite + React 前端打包为 Android 和 iOS 应用。
+- 使用鸿蒙 ArkWeb 创建一个极简鸿蒙原生应用，加载同一套 Web 资源，实现 HarmonyOS 支持。
+- 新增应用内设置页面，支持配置 LLM API Key、Base URL、Model、DSpark Endpoint、DSpark API Key 等。
+- 使用 Capacitor Preferences（Android/iOS）与 localStorage（鸿蒙 fallback）持久化配置。
+- 新增打包脚本 `npm run package:android`、`npm run package:ios`、`npm run package:harmony`，输出各平台可执行包。
+- 更新 `README.md`，说明下载安装 App、在设置中配置 API 即可使用。
+
+## Impact
+- Affected specs: 本地交付形态、配置管理、前端设置、构建脚本、项目文档。
+- Affected code: 新增 `capacitor.config.ts`、Android/iOS 平台目录、鸿蒙工程目录、`src/pages/Settings.tsx`、设置相关 UI；修改 `src/api.ts` 或新增 `src/settings.ts` 以读取和保存配置。
+
+## ADDED Requirements
+### Requirement:# 移动端应用打包：Android / iOS / 鸿蒙 Spec
+
+## Why
+当前项目以 Web 站点和源码压缩包形式交付，用户需要解压、安装依赖、配置环境变量并手动启动服务。为了降低使用门槛，需要将同一套前端能力打包为 Android、iOS 和鸿蒙可执行应用；用户只需安装 App，在设置页面填写 API 信息即可使用，无需任何环境变量或服务器部署。
+
+## What Changes
+- 使用 Capacitor 将现有 Vite + React 前端打包为 Android 和 iOS 应用。
+- 使用鸿蒙 ArkWeb 创建一个极简鸿蒙原生应用，加载同一套 Web 资源，实现 HarmonyOS 支持。
+- 新增应用内设置页面，支持配置 LLM API Key、Base URL、Model、DSpark Endpoint、DSpark API Key 等。
+- 使用 Capacitor Preferences（Android/iOS）与 localStorage（鸿蒙 fallback）持久化配置。
+- 新增打包脚本 `npm run package:android`、`npm run package:ios`、`npm run package:harmony`，输出各平台可执行包。
+- 更新 `README.md`，说明下载安装 App、在设置中配置 API 即可使用。
+
+## Impact
+- Affected specs: 本地交付形态、配置管理、前端设置、构建脚本、项目文档。
+- Affected code: 新增 `capacitor.config.ts`、Android/iOS 平台目录、鸿蒙工程目录、`src/pages/Settings.tsx`、设置相关 UI；修改 `src/api.ts` 或新增 `src/settings.ts` 以读取和保存配置。
+
+## ADDED Requirements
+### Requirement: Android 和 iOS 应用
+The system SHALL 通过 Capacitor 生成 Android# 移动端应用打包：Android / iOS / 鸿蒙 Spec
+
+## Why
+当前项目以 Web 站点和源码压缩包形式交付，用户需要解压、安装依赖、配置环境变量并手动启动服务。为了降低使用门槛，需要将同一套前端能力打包为 Android、iOS 和鸿蒙可执行应用；用户只需安装 App，在设置页面填写 API 信息即可使用，无需任何环境变量或服务器部署。
+
+## What Changes
+- 使用 Capacitor 将现有 Vite + React 前端打包为 Android 和 iOS 应用。
+- 使用鸿蒙 ArkWeb 创建一个极简鸿蒙原生应用，加载同一套 Web 资源，实现 HarmonyOS 支持。
+- 新增应用内设置页面，支持配置 LLM API Key、Base URL、Model、DSpark Endpoint、DSpark API Key 等。
+- 使用 Capacitor Preferences（Android/iOS）与 localStorage（鸿蒙 fallback）持久化配置。
+- 新增打包脚本 `npm run package:android`、`npm run package:ios`、`npm run package:harmony`，输出各平台可执行包。
+- 更新 `README.md`，说明下载安装 App、在设置中配置 API 即可使用。
+
+## Impact
+- Affected specs: 本地交付形态、配置管理、前端设置、构建脚本、项目文档。
+- Affected code: 新增 `capacitor.config.ts`、Android/iOS 平台目录、鸿蒙工程目录、`src/pages/Settings.tsx`、设置相关 UI；修改 `src/api.ts` 或新增 `src/settings.ts` 以读取和保存配置。
+
+## ADDED Requirements
+### Requirement: Android 和 iOS 应用
+The system SHALL 通过 Capacitor 生成 Android 和 iOS 应用包。
+
+#### Scenario: 打包 Android / iOS
+-# 移动端应用打包：Android / iOS / 鸿蒙 Spec
+
+## Why
+当前项目以 Web 站点和源码压缩包形式交付，用户需要解压、安装依赖、配置环境变量并手动启动服务。为了降低使用门槛，需要将同一套前端能力打包为 Android、iOS 和鸿蒙可执行应用；用户只需安装 App，在设置页面填写 API 信息即可使用，无需任何环境变量或服务器部署。
+
+## What Changes
+- 使用 Capacitor 将现有 Vite + React 前端打包为 Android 和 iOS 应用。
+- 使用鸿蒙 ArkWeb 创建一个极简鸿蒙原生应用，加载同一套 Web 资源，实现 HarmonyOS 支持。
+- 新增应用内设置页面，支持配置 LLM API Key、Base URL、Model、DSpark Endpoint、DSpark API Key 等。
+- 使用 Capacitor Preferences（Android/iOS）与 localStorage（鸿蒙 fallback）持久化配置。
+- 新增打包脚本 `npm run package:android`、`npm run package:ios`、`npm run package:harmony`，输出各平台可执行包。
+- 更新 `README.md`，说明下载安装 App、在设置中配置 API 即可使用。
+
+## Impact
+- Affected specs: 本地交付形态、配置管理、前端设置、构建脚本、项目文档。
+- Affected code: 新增 `capacitor.config.ts`、Android/iOS 平台目录、鸿蒙工程目录、`src/pages/Settings.tsx`、设置相关 UI；修改 `src/api.ts` 或新增 `src/settings.ts` 以读取和保存配置。
+
+## ADDED Requirements
+### Requirement: Android 和 iOS 应用
+The system SHALL 通过 Capacitor 生成 Android 和 iOS 应用包。
+
+#### Scenario: 打包 Android / iOS
+- **WHEN** 运行 `npm run package:android` 或 `npm run package:# 移动端应用打包：Android / iOS / 鸿蒙 Spec
+
+## Why
+当前项目以 Web 站点和源码压缩包形式交付，用户需要解压、安装依赖、配置环境变量并手动启动服务。为了降低使用门槛，需要将同一套前端能力打包为 Android、iOS 和鸿蒙可执行应用；用户只需安装 App，在设置页面填写 API 信息即可使用，无需任何环境变量或服务器部署。
+
+## What Changes
+- 使用 Capacitor 将现有 Vite + React 前端打包为 Android 和 iOS 应用。
+- 使用鸿蒙 ArkWeb 创建一个极简鸿蒙原生应用，加载同一套 Web 资源，实现 HarmonyOS 支持。
+- 新增应用内设置页面，支持配置 LLM API Key、Base URL、Model、DSpark Endpoint、DSpark API Key 等。
+- 使用 Capacitor Preferences（Android/iOS）与 localStorage（鸿蒙 fallback）持久化配置。
+- 新增打包脚本 `npm run package:android`、`npm run package:ios`、`npm run package:harmony`，输出各平台可执行包。
+- 更新 `README.md`，说明下载安装 App、在设置中配置 API 即可使用。
+
+## Impact
+- Affected specs: 本地交付形态、配置管理、前端设置、构建脚本、项目文档。
+- Affected code: 新增 `capacitor.config.ts`、Android/iOS 平台目录、鸿蒙工程目录、`src/pages/Settings.tsx`、设置相关 UI；修改 `src/api.ts` 或新增 `src/settings.ts` 以读取和保存配置。
+
+## ADDED Requirements
+### Requirement: Android 和 iOS 应用
+The system SHALL 通过 Capacitor 生成 Android 和 iOS 应用包。
+
+#### Scenario: 打包 Android / iOS
+- **WHEN** 运行 `npm run package:android` 或 `npm run package:ios`
+- **THEN** 生成对应平台的可执行包（apk / app）
+- **AND** 用户安装后可直接
