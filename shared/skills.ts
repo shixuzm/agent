@@ -1,6 +1,7 @@
 import { promises as fs } from 'fs';
 import path from 'path';
-import type { SkillDefinition, AgentDefinition } from './types';
+import type { SkillDefinition, AgentDefinition, ScheduledTask } from './types';
+import { SKILL_IDS } from './types';
 import { getStore } from './store';
 import { chatCompletion } from './llm';
 import { randomUUID } from '../agents/_utils';
@@ -280,6 +281,223 @@ const skillHandlers: Record<string, SkillHandler> = {
     }
 
     return { files: files.sort() };
+  },
+
+  // Task 3-7: dialogue assistant, file handler, content generator, workflow orchestrator, scheduler
+  dialogueAssistant: async (params, env) => {
+    const action = String(params.action ?? '');
+    const messages = Array.isArray(params.messages)
+      ? params.messages.map(m =>
+          typeof m === 'object' && m !== null
+            ? { role: String((m as { role?: unknown }).role ?? ''), content: String((m as { content?: unknown }).content ?? '') }
+            : { role: '', content: '' }
+        )
+      : [];
+    const query = String(params.query ?? '');
+
+    if (!['summarize', 'extract', 'reply'].includes(action)) {
+      return { error: `Unsupported action: ${action}` };
+    }
+
+    const context = messages.map(m => `${m.role}: ${m.content}`).join('\n');
+    let userPrompt = '';
+    if (action === 'summarize') {
+      userPrompt = `请对以下对话进行摘要，提炼核心要点与结论：\n\n${context}`;
+    } else if (action === 'extract') {
+      userPrompt = `请从以下对话中提取关键信息，包括 action items、关键决策、待办事项与责任人：\n\n${context}`;
+    } else {
+      userPrompt = `基于以下对话上下文，回答用户问题：${query}\n\n${context}`;
+    }
+
+    const result = await chatCompletion(env ?? {}, [
+      { role: 'system', content: '你是一位对话分析助手，擅长摘要、信息提取与上下文回复。' },
+      { role: 'user', content: userPrompt },
+    ]);
+
+    return { action, result };
+  },
+
+  fileHandler: async (params) => {
+    const action = String(params.action ?? '');
+    const relPath = String(params.path ?? '');
+    const content = params.content !== undefined ? String(params.content) : undefined;
+
+    const root = '/workspace';
+    const resolved = path.resolve(root, relPath);
+    const normalized = path.normalize(resolved);
+    if (!normalized.startsWith(root + path.sep) && normalized !== root) {
+      return { error: 'Access denied: path must be within /workspace' };
+    }
+
+    if (action === 'read') {
+      try {
+        const data = await fs.readFile(normalized, 'utf-8');
+        return { content: data };
+      } catch (e) {
+        return { content: '', error: e instanceof Error ? e.message : String(e) };
+      }
+    }
+
+    if (action === 'write') {
+      if (content === undefined) {
+        return { error: 'Missing content for write action' };
+      }
+      try {
+        await fs.mkdir(path.dirname(normalized), { recursive: true });
+        await fs.writeFile(normalized, content, 'utf-8');
+        return { written: true, path: normalized, length: content.length };
+      } catch (e) {
+        return { written: false, error: e instanceof Error ? e.message : String(e) };
+      }
+    }
+
+    if (action === 'list') {
+      try {
+        const entries = await fs.readdir(normalized, { withFileTypes: true });
+        return {
+          files: entries.map(entry => ({
+            name: entry.name,
+            isDirectory: entry.isDirectory(),
+          })),
+        };
+      } catch (e) {
+        return { files: [], error: e instanceof Error ? e.message : String(e) };
+      }
+    }
+
+    return { error: `Unsupported action: ${action}` };
+  },
+
+  contentGenerator: async (params, env) => {
+    const type = String(params.type ?? 'text');
+    const prompt = String(params.prompt ?? '');
+    const language = String(params.language ?? '');
+    const format = String(params.format ?? '');
+
+    let systemPrompt = '你是一位内容生成助手。';
+    let userPrompt = prompt;
+
+    if (type === 'code') {
+      systemPrompt = `你是一位代码生成助手。生成${language ? ` ${language}` : ''}代码，只输出可执行代码，避免冗长解释。`;
+      userPrompt = `请生成以下需求的代码：\n${prompt}`;
+    } else if (type === 'doc') {
+      systemPrompt = '你是一位文档撰写助手，生成结构清晰、内容完整的文档。';
+      userPrompt = `请根据以下需求生成文档${format ? `（格式：${format}）` : ''}：\n${prompt}`;
+    } else {
+      userPrompt = `请根据以下需求生成文本内容：\n${prompt}`;
+    }
+
+    const result = await chatCompletion(env ?? {}, [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userPrompt },
+    ]);
+
+    return { type, content: result };
+  },
+
+  workflowOrchestrator: async (params, env) => {
+    const action = String(params.action ?? '');
+
+    if (action === 'createPlan') {
+      const goal = String(params.goal ?? '');
+      const availableSkills = (await listSkills(env)).map(s => `${s.id}：${s.name}`).join('\n');
+      const userPrompt = `你是一个工作流规划助手。请根据目标制定执行计划。\n\n目标：${goal}\n\n可用技能：\n${availableSkills}\n\n请返回 JSON 数组，每个元素包含 { id, description, skillId, params, dependsOn }。dependsOn 是前置步骤 id 数组。只返回 JSON，不要额外说明。`;
+
+      const raw = await chatCompletion(env ?? {}, [
+        { role: 'system', content: '你是一个工作流规划专家，只返回合法的 JSON。' },
+        { role: 'user', content: userPrompt },
+      ]);
+
+      try {
+        const steps = JSON.parse(raw.replace(/```json|```/g, '').trim());
+        return { steps };
+      } catch {
+        return { steps: [], raw, error: 'Failed to parse plan JSON' };
+      }
+    }
+
+    if (action === 'executeStep') {
+      const stepParam = params.step as Record<string, unknown> | undefined;
+      let step: Record<string, unknown> | undefined = stepParam;
+
+      if (!step && params.stepId) {
+        const stepId = String(params.stepId);
+        const steps = Array.isArray(params.steps) ? params.steps : [];
+        step = steps.find(
+          (s: unknown) => typeof s === 'object' && s !== null && (s as { id?: string }).id === stepId
+        ) as Record<string, unknown> | undefined;
+      }
+
+      if (!step || typeof step !== 'object') {
+        return { error: 'Missing step to execute. Provide step object or stepId + steps.' };
+      }
+
+      const skillId = String(step.skillId ?? '');
+      const skillParams = typeof step.params === 'object' && step.params !== null
+        ? (step.params as Record<string, unknown>)
+        : {};
+      const result = await executeSkill(skillId, skillParams, env);
+      return { stepId: step.id, result };
+    }
+
+    return { error: `Unsupported action: ${action}` };
+  },
+
+  scheduler: async (params, env) => {
+    const action = String(params.action ?? '');
+    const store = getStore(env);
+
+    if (action === 'create') {
+      const taskParam = params.task as Partial<ScheduledTask> | undefined;
+      if (!taskParam || typeof taskParam !== 'object') {
+        return { error: 'Missing task to create' };
+      }
+      if (!taskParam.skillId) {
+        return {
+          error: `skillId is required. Built-in skill IDs include: ${Object.values(SKILL_IDS).join(', ')}`,
+        };
+      }
+
+      const now = Date.now();
+      const task: ScheduledTask = {
+        id: taskParam.id || `scheduled_${now}_${Math.random().toString(36).slice(2, 8)}`,
+        name: taskParam.name || '未命名任务',
+        description: taskParam.description,
+        cron: taskParam.cron || '0 9 * * *',
+        skillId: taskParam.skillId,
+        params: taskParam.params,
+        enabled: taskParam.enabled !== false,
+        createdAt: taskParam.createdAt || now,
+        updatedAt: now,
+      };
+
+      await store.saveScheduledTask(task);
+      return { task };
+    }
+
+    if (action === 'list') {
+      const tasks = await store.listScheduledTasks();
+      return { tasks };
+    }
+
+    if (action === 'delete') {
+      const taskId = String(params.taskId ?? '');
+      await store.deleteScheduledTask(taskId);
+      return { deleted: true, taskId };
+    }
+
+    if (action === 'toggle') {
+      const taskId = String(params.taskId ?? '');
+      const task = await store.getScheduledTask(taskId);
+      if (!task) {
+        return { error: `Task not found: ${taskId}` };
+      }
+      const updated: ScheduledTask = { ...task, enabled: !task.enabled, updatedAt: Date.now() };
+      await store.saveScheduledTask(updated);
+      return { task: updated, enabled: updated.enabled };
+    }
+
+    return { error: `Unsupported action: ${action}` };
   },
 };
 

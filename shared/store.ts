@@ -4,12 +4,16 @@ import type {
   KnowledgeBase,
   Conversation,
   Task,
+  ScheduledTask,
   AgentReflection,
   AgentEvolution,
   ImprovementProposal,
   Store,
 } from './types';
+import { SKILL_IDS } from './types';
 import { KVStore } from './kvStore';
+
+export type { Store } from './types';
 
 /**
  * In-memory store implementation with a persistence-friendly interface.
@@ -17,12 +21,13 @@ import { KVStore } from './kvStore';
  * In production on EdgeOne Makers this can be swapped for Makers KV,
  * SQLite (desktop), or another persistent store by implementing the Store interface.
  */
-class MemoryStore implements Store {
+export class MemoryStore implements Store {
   private agents = new Map<string, AgentDefinition>();
   private skills = new Map<string, SkillDefinition>();
   private knowledgeBases = new Map<string, KnowledgeBase>();
   private conversations = new Map<string, Conversation>();
   private tasks = new Map<string, Task>();
+  private scheduledTasks = new Map<string, ScheduledTask>();
   private reflections = new Map<string, AgentReflection>();
   private evolutions = new Map<string, AgentEvolution>();
   private proposals = new Map<string, ImprovementProposal>();
@@ -191,6 +196,158 @@ class MemoryStore implements Store {
         outputSchema: { type: 'object', properties: { files: { type: 'array' } } },
         handler: 'listProject',
       },
+      // Task 3-7: new built-in skills
+      {
+        id: SKILL_IDS.DIALOGUE_ASSISTANT,
+        name: '对话助手',
+        description: '对对话进行摘要、提取关键信息或基于上下文回复',
+        version: '1.0.0',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            action: { type: 'string', enum: ['summarize', 'extract', 'reply'] },
+            messages: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  role: { type: 'string' },
+                  content: { type: 'string' },
+                },
+                required: ['role', 'content'],
+              },
+            },
+            query: { type: 'string' },
+          },
+          required: ['action', 'messages'],
+        },
+        outputSchema: {
+          type: 'object',
+          properties: {
+            action: { type: 'string' },
+            result: { type: 'string' },
+          },
+        },
+        handler: 'dialogueAssistant',
+      },
+      {
+        id: SKILL_IDS.FILE_HANDLER,
+        name: '文件处理',
+        description: '读取、写入、列出 /workspace 下的文件',
+        version: '1.0.0',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            action: { type: 'string', enum: ['read', 'write', 'list'] },
+            path: { type: 'string' },
+            content: { type: 'string' },
+          },
+          required: ['action'],
+        },
+        outputSchema: {
+          type: 'object',
+          properties: {
+            content: { type: 'string' },
+            files: { type: 'array' },
+            written: { type: 'boolean' },
+          },
+        },
+        handler: 'fileHandler',
+      },
+      {
+        id: SKILL_IDS.CONTENT_GENERATOR,
+        name: '内容生成',
+        description: '根据需求生成文本、代码或文档',
+        version: '1.0.0',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            type: { type: 'string', enum: ['text', 'code', 'doc'] },
+            prompt: { type: 'string' },
+            language: { type: 'string' },
+            format: { type: 'string' },
+          },
+          required: ['type', 'prompt'],
+        },
+        outputSchema: {
+          type: 'object',
+          properties: {
+            type: { type: 'string' },
+            content: { type: 'string' },
+          },
+        },
+        handler: 'contentGenerator',
+      },
+      {
+        id: SKILL_IDS.WORKFLOW_ORCHESTRATOR,
+        name: '流程编排',
+        description: '根据目标生成执行计划并执行单个步骤',
+        version: '1.0.0',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            action: { type: 'string', enum: ['createPlan', 'executeStep'] },
+            goal: { type: 'string' },
+            steps: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  id: { type: 'string' },
+                  description: { type: 'string' },
+                  skillId: { type: 'string' },
+                  params: { type: 'object' },
+                  dependsOn: { type: 'array', items: { type: 'string' } },
+                },
+              },
+            },
+          },
+          required: ['action'],
+        },
+        outputSchema: {
+          type: 'object',
+          properties: {
+            steps: { type: 'array' },
+            result: {},
+          },
+        },
+        handler: 'workflowOrchestrator',
+      },
+      {
+        id: SKILL_IDS.SCHEDULER,
+        name: '定时任务',
+        description: '创建、列出、删除、切换定时任务状态（仅 CRUD，不触发实际执行）',
+        version: '1.0.0',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            action: { type: 'string', enum: ['create', 'list', 'delete', 'toggle'] },
+            task: {
+              type: 'object',
+              properties: {
+                id: { type: 'string' },
+                name: { type: 'string' },
+                description: { type: 'string' },
+                cron: { type: 'string' },
+                skillId: { type: 'string' },
+                params: { type: 'object' },
+                enabled: { type: 'boolean' },
+              },
+            },
+            taskId: { type: 'string' },
+          },
+          required: ['action'],
+        },
+        outputSchema: {
+          type: 'object',
+          properties: {
+            tasks: { type: 'array' },
+            task: { type: 'object' },
+            deleted: { type: 'boolean' },
+          },
+        },
+        handler: 'scheduler',
+      },
     ];
 
     for (const skill of skills) {
@@ -231,6 +388,8 @@ class MemoryStore implements Store {
           'skill_create_agent',
           'skill_read_code',
           'skill_list_project',
+          'skill_dialogue_assistant',
+          'skill_workflow_orchestrator',
         ],
         isBuiltIn: true,
         generation: 0,
@@ -251,7 +410,7 @@ class MemoryStore implements Store {
           '- 如果任务超出代码范畴，说明并拒绝。\n' +
           '\n' +
           '自我成长：每次任务结束后，你会反思输出质量，识别可以改进的地方，并在后续任务中应用这些经验。',
-        skillIds: ['skill_code_execution', 'skill_file_operation', 'skill_reflect', 'skill_evolve_agent', 'skill_read_code'],
+        skillIds: ['skill_code_execution', 'skill_file_operation', 'skill_reflect', 'skill_evolve_agent', 'skill_read_code', 'skill_file_handler', 'skill_content_generator'],
         isBuiltIn: true,
         generation: 0,
         createdAt: now,
@@ -271,7 +430,7 @@ class MemoryStore implements Store {
           '- 保持语言自然流畅。\n' +
           '\n' +
           '自我成长：每次任务结束后，你会反思输出质量，识别可以改进的地方，并在后续任务中应用这些经验。',
-        skillIds: ['skill_file_operation', 'skill_reflect', 'skill_evolve_agent'],
+        skillIds: ['skill_file_operation', 'skill_reflect', 'skill_evolve_agent', 'skill_content_generator', 'skill_dialogue_assistant'],
         isBuiltIn: true,
         generation: 0,
         createdAt: now,
@@ -291,7 +450,7 @@ class MemoryStore implements Store {
           '- 可输出研究报告或摘要。\n' +
           '\n' +
           '自我成长：每次任务结束后，你会反思输出质量，识别可以改进的地方，并在后续任务中应用这些经验。',
-        skillIds: ['skill_knowledge_retrieval', 'skill_web_search', 'skill_file_operation', 'skill_reflect', 'skill_evolve_agent'],
+        skillIds: ['skill_knowledge_retrieval', 'skill_web_search', 'skill_file_operation', 'skill_reflect', 'skill_evolve_agent', 'skill_content_generator'],
         isBuiltIn: true,
         generation: 0,
         createdAt: now,
@@ -310,7 +469,7 @@ class MemoryStore implements Store {
           '- 输出审核结论：通过/需修改，并说明理由。\n' +
           '\n' +
           '自我成长：每次任务结束后，你会反思审核判断，识别可以改进的地方，并在后续任务中应用这些经验。',
-        skillIds: ['skill_calculator', 'skill_reflect', 'skill_evolve_agent'],
+        skillIds: ['skill_calculator', 'skill_reflect', 'skill_evolve_agent', 'skill_dialogue_assistant'],
         isBuiltIn: true,
         generation: 0,
         createdAt: now,
@@ -432,10 +591,27 @@ class MemoryStore implements Store {
   listTasks(conversationId?: string): Task[] {
     const all = Array.from(this.tasks.values());
     if (!conversationId) return all;
-    return all.filter(t => {
+    return all.filter(() => {
       // Task does not store conversationId directly in type; keep simple for now.
       return true;
     });
+  }
+
+  // Scheduled tasks
+  listScheduledTasks(): ScheduledTask[] {
+    return Array.from(this.scheduledTasks.values());
+  }
+
+  getScheduledTask(id: string): ScheduledTask | undefined {
+    return this.scheduledTasks.get(id);
+  }
+
+  saveScheduledTask(task: ScheduledTask): void {
+    this.scheduledTasks.set(task.id, task);
+  }
+
+  deleteScheduledTask(id: string): void {
+    this.scheduledTasks.delete(id);
   }
 
   // Reflections

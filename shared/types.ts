@@ -2,6 +2,14 @@
  * Core type definitions for the AI multi-agent system.
  */
 
+export const SKILL_IDS = {
+  DIALOGUE_ASSISTANT: 'skill_dialogue_assistant',
+  FILE_HANDLER: 'skill_file_handler',
+  CONTENT_GENERATOR: 'skill_content_generator',
+  WORKFLOW_ORCHESTRATOR: 'skill_workflow_orchestrator',
+  SCHEDULER: 'skill_scheduler',
+} as const;
+
 export interface ModelConfig {
   provider: 'makers' | 'openai' | 'anthropic' | 'custom';
   modelId: string;
@@ -31,6 +39,8 @@ export interface AgentDefinition {
   role: 'super' | 'coder' | 'writer' | 'researcher' | 'reviewer' | 'custom';
   systemPrompt: string;
   modelConfig?: ModelConfig;
+  // skillIds is intentionally a plain string array so agents can reference any skill,
+  // including built-in skills, user-defined skills, and future skills.
   skillIds: string[];
   knowledgeBaseIds?: string[];
   toolPermissions?: string[];
@@ -104,6 +114,20 @@ export interface Task {
   createdAt: number;
   completedAt?: number;
   error?: string;
+}
+
+export interface ScheduledTask {
+  id: string;
+  name: string;
+  description?: string;
+  cron: string;
+  skillId: string;
+  params?: Record<string, unknown>;
+  enabled: boolean;
+  createdAt: number;
+  updatedAt?: number;
+  lastRunAt?: number;
+  nextRunAt?: number;
 }
 
 export interface Conversation {
@@ -184,6 +208,12 @@ export interface Store {
   getTask(id: string): Task | undefined | Promise<Task | undefined>;
   saveTask(task: Task): void | Promise<void>;
   listTasks(conversationId?: string): Task[] | Promise<Task[]>;
+
+  // Scheduled tasks
+  listScheduledTasks(): ScheduledTask[] | Promise<ScheduledTask[]>;
+  getScheduledTask(id: string): ScheduledTask | undefined | Promise<ScheduledTask | undefined>;
+  saveScheduledTask(task: ScheduledTask): void | Promise<void>;
+  deleteScheduledTask(id: string): void | Promise<void>;
 
   // Reflections & evolution
   saveReflection(reflection: AgentReflection): void | Promise<void>;

@@ -18,6 +18,7 @@ import type {
   KnowledgeBase,
   Conversation,
   Task,
+  ScheduledTask,
   AgentReflection,
   AgentEvolution,
   ImprovementProposal,
@@ -33,6 +34,7 @@ interface KVState {
   knowledgeBases: KnowledgeBase[];
   conversations: Conversation[];
   tasks: Task[];
+  scheduledTasks: ScheduledTask[];
   reflections: AgentReflection[];
   evolutions: AgentEvolution[];
   proposals: ImprovementProposal[];
@@ -77,6 +79,7 @@ export class KVStore implements Store {
         }
         for (const conv of state.conversations ?? []) this.memory.saveConversation(conv);
         for (const task of state.tasks ?? []) this.memory.saveTask(task);
+        for (const scheduledTask of state.scheduledTasks ?? []) this.memory.saveScheduledTask(scheduledTask);
         for (const r of state.reflections ?? []) this.memory.saveReflection(r);
         for (const e of state.evolutions ?? []) this.memory.saveEvolution(e);
         for (const p of state.proposals ?? []) this.memory.saveProposal(p);
@@ -96,6 +99,7 @@ export class KVStore implements Store {
       knowledgeBases: this.memory.listKnowledgeBases(),
       conversations: this.memory.listConversations(),
       tasks: this.memory.listTasks(),
+      scheduledTasks: this.memory.listScheduledTasks(),
       reflections: this.memory.listReflections(),
       evolutions: this.memory.listEvolutions(),
       proposals: this.memory.listProposals(),
@@ -195,6 +199,25 @@ export class KVStore implements Store {
   async listTasks(conversationId?: string): Promise<Task[]> {
     await this.ensureLoaded();
     return this.memory.listTasks(conversationId);
+  }
+
+  // Scheduled tasks
+  async listScheduledTasks(): Promise<ScheduledTask[]> {
+    await this.ensureLoaded();
+    return this.memory.listScheduledTasks();
+  }
+
+  async getScheduledTask(id: string): Promise<ScheduledTask | undefined> {
+    await this.ensureLoaded();
+    return this.memory.getScheduledTask(id);
+  }
+
+  async saveScheduledTask(task: ScheduledTask): Promise<void> {
+    return this.withPersist(() => this.memory.saveScheduledTask(task));
+  }
+
+  async deleteScheduledTask(id: string): Promise<void> {
+    return this.withPersist(() => this.memory.deleteScheduledTask(id));
   }
 
   // Reflections

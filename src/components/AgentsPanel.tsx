@@ -133,7 +133,11 @@ export function AgentsPanel({ onClose, onAgentsChanged }: AgentsPanelProps) {
       <div className={styles.skillTags}>
         {agent.skillIds.map(id => {
           const skill = skills.find(s => s.id === id);
-          return <span key={id} className={styles.skillTag}>{skill?.name ?? id}</span>;
+          return (
+            <span key={id} className={styles.skillTag} title={skill?.description}>
+              {skill?.name ?? id}
+            </span>
+          );
         })}
       </div>
     </div>
@@ -197,13 +201,18 @@ export function AgentsPanel({ onClose, onAgentsChanged }: AgentsPanelProps) {
                   <span>技能</span>
                   <div className={styles.skillOptions}>
                     {skills.map(skill => (
-                      <label key={skill.id} className={styles.checkOption}>
+                      <label key={skill.id} className={styles.checkOption} title={skill.description}>
                         <input
                           type="checkbox"
                           checked={formSkillIds.includes(skill.id)}
                           onChange={() => toggleSkill(skill.id)}
                         />
-                        {skill.name}
+                        <span className={styles.checkOptionText}>
+                          <span className={styles.checkOptionName}>{skill.name}</span>
+                          {skill.description && (
+                            <span className={styles.checkOptionDesc}>{skill.description}</span>
+                          )}
+                        </span>
                       </label>
                     ))}
                   </div>
@@ -230,7 +239,11 @@ export function AgentsPanel({ onClose, onAgentsChanged }: AgentsPanelProps) {
                 <div className={styles.skillTags}>
                   {selectedAgent.skillIds.map(id => {
                     const skill = skills.find(s => s.id === id);
-                    return <span key={id} className={styles.skillTag}>{skill?.name ?? id}</span>;
+                    return (
+                      <span key={id} className={styles.skillTag} title={skill?.description}>
+                        {skill?.name ?? id}
+                      </span>
+                    );
                   })}
                 </div>
                 {!selectedAgent.isBuiltIn && (
