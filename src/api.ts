@@ -31,6 +31,9 @@ export const API = {
   deleteConversation: '/delete-conversation', // Permanently delete a conversation
   agents: '/agents',                        // Agent management
   skills: '/skills',                        // Skill management
+  reflections: '/reflections',              // Agent self-reflections
+  evolutions: '/evolutions',                // Agent evolution history
+  proposals: '/proposals',                  // Self-improvement proposals
 } as const;
 
 export interface RawSseEvent {
@@ -356,6 +359,45 @@ export async function listSkills(): Promise<SkillDefinition[]> {
     if (!res.ok) return [];
     const data = (await res.json().catch(() => null)) as { skills?: SkillDefinition[] } | null;
     return data?.skills ?? [];
+  } catch {
+    return [];
+  }
+}
+
+/** List reflections, optionally filtered by agent. */
+export async function listReflections(agentId?: string) {
+  try {
+    const qs = agentId ? `?agentId=${encodeURIComponent(agentId)}` : '';
+    const res = await fetch(`${API.reflections}${qs}`, { method: 'GET' });
+    if (!res.ok) return [];
+    const data = (await res.json().catch(() => null)) as { reflections?: unknown[] } | null;
+    return data?.reflections ?? [];
+  } catch {
+    return [];
+  }
+}
+
+/** List evolutions, optionally filtered by agent. */
+export async function listEvolutions(agentId?: string) {
+  try {
+    const qs = agentId ? `?agentId=${encodeURIComponent(agentId)}` : '';
+    const res = await fetch(`${API.evolutions}${qs}`, { method: 'GET' });
+    if (!res.ok) return [];
+    const data = (await res.json().catch(() => null)) as { evolutions?: unknown[] } | null;
+    return data?.evolutions ?? [];
+  } catch {
+    return [];
+  }
+}
+
+/** List improvement proposals. */
+export async function listProposals(status?: string) {
+  try {
+    const qs = status ? `?status=${encodeURIComponent(status)}` : '';
+    const res = await fetch(`${API.proposals}${qs}`, { method: 'GET' });
+    if (!res.ok) return [];
+    const data = (await res.json().catch(() => null)) as { proposals?: unknown[] } | null;
+    return data?.proposals ?? [];
   } catch {
     return [];
   }

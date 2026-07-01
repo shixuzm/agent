@@ -35,6 +35,47 @@ export interface AgentDefinition {
   knowledgeBaseIds?: string[];
   toolPermissions?: string[];
   isBuiltIn: boolean;
+  generation?: number; // how many times this agent has evolved
+  createdAt?: number;
+  updatedAt?: number;
+}
+
+export interface AgentReflection {
+  id: string;
+  agentId: string;
+  taskId?: string;
+  conversationId?: string;
+  originalOutput: string;
+  assessment: 'good' | 'adequate' | 'poor';
+  strengths: string[];
+  weaknesses: string[];
+  improvements: string[];
+  suggestedPromptDelta?: string;
+  suggestedSkillIds?: string[];
+  timestamp: number;
+}
+
+export interface AgentEvolution {
+  id: string;
+  agentId: string;
+  generation: number;
+  previousPrompt: string;
+  newPrompt: string;
+  reason: string;
+  triggeredByReflectionId?: string;
+  timestamp: number;
+}
+
+export interface ImprovementProposal {
+  id: string;
+  targetType: 'agent' | 'skill' | 'code' | 'system';
+  targetId?: string;
+  description: string;
+  proposedChanges: string;
+  status: 'proposed' | 'applied' | 'rejected';
+  rationale: string;
+  timestamp: number;
+  appliedAt?: number;
 }
 
 export interface KnowledgeBase {
@@ -143,4 +184,15 @@ export interface Store {
   getTask(id: string): Task | undefined;
   saveTask(task: Task): void;
   listTasks(conversationId?: string): Task[];
+
+  // Reflections & evolution
+  saveReflection(reflection: AgentReflection): void;
+  listReflections(agentId?: string): AgentReflection[];
+  saveEvolution(evolution: AgentEvolution): void;
+  listEvolutions(agentId?: string): AgentEvolution[];
+
+  // Improvement proposals (for self-improving the app)
+  saveProposal(proposal: ImprovementProposal): void;
+  listProposals(status?: ImprovementProposal['status']): ImprovementProposal[];
+  getProposal(id: string): ImprovementProposal | undefined;
 }

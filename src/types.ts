@@ -72,6 +72,9 @@ export interface AgentDefinition {
   systemPrompt: string;
   skillIds: string[];
   isBuiltIn: boolean;
+  generation?: number;
+  createdAt?: number;
+  updatedAt?: number;
 }
 
 /**
