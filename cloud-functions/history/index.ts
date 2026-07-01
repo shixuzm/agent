@@ -193,9 +193,10 @@ export async function onRequestPost(context: any): Promise<Response> {
   }
 
   try {
-    // First try our in-memory multi-agent store (used by /chat orchestrator)
-    const ourStore = getStore();
-    const conversation = ourStore.getConversation(conversationId);
+    // First try our multi-agent store (used by /chat orchestrator)
+    const env = context.env as Record<string, string | undefined>;
+    const ourStore = getStore(env);
+    const conversation = await ourStore.getConversation(conversationId);
     if (conversation && conversation.messages.length > 0) {
       const messages = conversation.messages
         .filter((m): m is StoreMessage & { role: 'user' | 'assistant' } => m.role === 'user' || m.role === 'assistant')

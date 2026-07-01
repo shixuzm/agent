@@ -302,9 +302,10 @@ export async function onRequestPost(context: any): Promise<Response> {
 
     let normalized = firstPass.map(entry => entry.normalized);
 
-    // Merge conversations from our in-memory multi-agent store
+    // Merge conversations from our multi-agent store
     try {
-      const ourConversations = getStore().listConversations(userId);
+      const env = context.env as Record<string, string | undefined>;
+      const ourConversations = await getStore(env).listConversations(userId);
       const existingIds = new Set(normalized.map(c => c.id));
       for (const conv of ourConversations) {
         if (existingIds.has(conv.id)) continue;

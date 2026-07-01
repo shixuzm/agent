@@ -5,23 +5,25 @@
  * POST: { action: 'get' | 'save' | 'delete', ... } manage skills
  */
 
-import { listSkills, getSkill, saveSkill, deleteSkill } from '../../shared/skills';
+import { getStore } from '../../shared/store';
 import type { SkillDefinition } from '../../shared/types';
 
 export async function onRequest(context: any) {
   const request = context.request;
   const method = request.method ?? 'GET';
+  const env = context.env as Record<string, string | undefined>;
+  const store = getStore(env);
 
   try {
     if (method === 'GET') {
-      return jsonResponse({ skills: listSkills() });
+      return jsonResponse({ skills: await store.listSkills() });
     }
 
     const body = request.body ?? {};
     const action = body.action ?? 'get';
 
     if (action === 'get') {
-      const skill = getSkill(body.id);
+      const skill = await store.getSkill(body.id);
       return jsonResponse({ skill: skill ?? null });
     }
 
@@ -30,12 +32,12 @@ export async function onRequest(context: any) {
       if (!skill?.id || !skill.name) {
         return jsonResponse({ error: 'skill.id and skill.name are required' }, 400);
       }
-      saveSkill(skill);
-      return jsonResponse({ skill: getSkill(skill.id) });
+      await store.saveSkill(skill);
+      return jsonResponse({ skill: await store.getSkill(skill.id) });
     }
 
     if (action === 'delete') {
-      deleteSkill(body.id);
+      await store.deleteSkill(body.id);
       return jsonResponse({ success: true });
     }
 

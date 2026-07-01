@@ -74,9 +74,10 @@ export async function onRequestPost(context: any): Promise<Response> {
     if (userId) args.userId = userId;
     await store.deleteConversation(args);
 
-    // Also delete from our in-memory multi-agent store
+    // Also delete from our multi-agent store
     try {
-      getStore().deleteConversation(conversationId);
+      const env = context.env as Record<string, string | undefined>;
+      await getStore(env).deleteConversation(conversationId);
     } catch (e2) {
       logger.error('[delete-conversation] failed to delete from multi-agent store:', e2);
     }

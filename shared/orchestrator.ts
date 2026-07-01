@@ -23,18 +23,18 @@ export async function selectAgent(
   preferredAgentId?: string,
 ): Promise<{ agent: AgentDefinition; reasoning: string }> {
   if (preferredAgentId) {
-    const agent = getAgent(preferredAgentId);
+    const agent = await getAgent(preferredAgentId, env);
     if (agent) {
       return { agent, reasoning: `用户指定使用 ${agent.name}` };
     }
   }
 
-  const superAgent = getAgent('agent_super');
+  const superAgent = await getAgent('agent_super', env);
   if (!superAgent) {
     throw new Error('Super agent not found in registry');
   }
 
-  const specialists = getSpecialistAgents();
+  const specialists = await getSpecialistAgents(env);
   const agentDescriptions = specialists
     .map(a => `- ${a.name}（${a.role}）：${a.description}`)
     .join('\n');
@@ -62,15 +62,15 @@ export async function selectAgent(
   // Fallback: keyword matching
   const lower = message.toLowerCase();
   if (lower.includes('代码') || lower.includes('编程') || lower.includes('function') || lower.includes('bug')) {
-    const coder = getAgent('agent_coder');
+    const coder = await getAgent('agent_coder', env);
     if (coder) return { agent: coder, reasoning: '请求包含编程相关关键词，匹配代码智能体' };
   }
   if (lower.includes('写') || lower.includes('文章') || lower.includes('报告') || lower.includes('邮件') || lower.includes('文案')) {
-    const writer = getAgent('agent_writer');
+    const writer = await getAgent('agent_writer', env);
     if (writer) return { agent: writer, reasoning: '请求包含写作相关关键词，匹配写作智能体' };
   }
   if (lower.includes('分析') || lower.includes('研究') || lower.includes('资料') || lower.includes('检索')) {
-    const researcher = getAgent('agent_researcher');
+    const researcher = await getAgent('agent_researcher', env);
     if (researcher) return { agent: researcher, reasoning: '请求包含研究分析关键词，匹配研究智能体' };
   }
 
@@ -86,7 +86,7 @@ export async function executeAgentTask(
   taskInput: string,
   conversationContext: string,
 ): Promise<string> {
-  const skillDescriptions = getSkillDescriptionsForAgent(agent.skillIds);
+  const skillDescriptions = await getSkillDescriptionsForAgent(agent.skillIds, env);
 
   const systemPrompt = `${agent.systemPrompt}\n\n你可以使用以下技能（当前为模拟实现，如需调用可在回复中说明）：\n${skillDescriptions}\n\n直接给出最终答案，保持简洁。`;
 
@@ -137,8 +137,8 @@ export async function createImprovementProposal(
   env: Record<string, string | undefined>,
   userRequest: string,
 ): Promise<ImprovementProposal> {
-  const store = getStore();
-  const superAgent = getAgent('agent_super');
+  const store = getStore(env);
+  const superAgent = await getAgent('agent_super', env);
 
   // Scan project structure
   const project = await executeSkill('skill_list_project', {}, env) as { files: string[] };
@@ -183,7 +183,7 @@ export async function createImprovementProposal(
     timestamp: Date.now(),
   };
 
-  store.saveProposal(proposal);
+  await store.saveProposal(proposal);
   return proposal;
 }
 
@@ -207,8 +207,8 @@ export async function planAndExecute(
   env: Record<string, string | undefined>,
   input: OrchestratorInput,
 ): Promise<OrchestratorResult> {
-  const store = getStore();
-  const conversation = store.getConversation(input.conversationId);
+  const store = getStore(env);
+  const conversation = await store.getConversation(input.conversationId);
   const contextMessages = conversation?.messages ?? [];
   const contextText = contextMessages
     .slice(-10)
@@ -239,7 +239,7 @@ export async function planAndExecute(
         timestamp: Date.now(),
       });
       conversation.updatedAt = Date.now();
-      store.saveConversation(conversation);
+      await store.saveConversation(conversation);
     }
 
     return {
@@ -261,7 +261,7 @@ export async function planAndExecute(
 
   if (isCreateAgentRequest) {
     const agent = await createAgentFromDescription(env, input.message);
-    const response = `已创建新智能体 **${agent.name}**（${agent.role}）。\n\n- 描述：${agent.description}\n- 技能：${agent.skillIds.map(id => store.getSkill(id)?.name ?? id).join('、')}\n\n你可以在顶部下拉框中选择并使用它。`;
+    const response = `已创建新智能体 **${agent.name}**（${agent.role}）。\n\n- 描述：${agent.description}\n- 技能：${(await Promise.all(agent.skillIds.map(async id => (await store.getSkill(id))?.name ?? id))).join('、')}\n\n你可以在顶部下拉框中选择并使用它。`;
 
     if (conversation) {
       conversation.messages.push({
@@ -273,7 +273,7 @@ export async function planAndExecute(
         timestamp: Date.now(),
       });
       conversation.updatedAt = Date.now();
-      store.saveConversation(conversation);
+      await store.saveConversation(conversation);
     }
 
     return {
@@ -297,7 +297,7 @@ export async function planAndExecute(
     input: input.message,
     createdAt: Date.now(),
   };
-  store.saveTask(task);
+  await store.saveTask(task);
 
   // Step 3: execute task
   let response: string;
@@ -311,7 +311,7 @@ export async function planAndExecute(
     task.error = e instanceof Error ? e.message : String(e);
     response = `任务执行失败：${task.error}`;
   }
-  store.saveTask(task);
+  await store.saveTask(task);
 
   // Step 4: save message to conversation
   if (conversation) {
@@ -325,7 +325,7 @@ export async function planAndExecute(
       timestamp: Date.now(),
     });
     conversation.updatedAt = Date.now();
-    store.saveConversation(conversation);
+    await store.saveConversation(conversation);
   }
 
   // Step 5: trigger self-growth asynchronously

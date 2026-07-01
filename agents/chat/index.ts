@@ -37,9 +37,11 @@ export async function onRequest(context: any) {
 
   logger.log(`[request] cid=${conversationId}, uid=${userId ?? '-'}, message="${message.slice(0, 50)}..."`);
 
+  const env = context.env as Record<string, string | undefined>;
+  const store = getStore(env);
+
   // Ensure conversation exists in our store
-  const store = getStore();
-  let conversation = conversationId ? store.getConversation(conversationId) : undefined;
+  let conversation = conversationId ? await store.getConversation(conversationId) : undefined;
   if (!conversation && conversationId) {
     conversation = {
       id: conversationId,
@@ -48,7 +50,7 @@ export async function onRequest(context: any) {
       createdAt: Date.now(),
       updatedAt: Date.now(),
     };
-    store.saveConversation(conversation);
+    await store.saveConversation(conversation);
   }
 
   // Record user message
@@ -61,10 +63,9 @@ export async function onRequest(context: any) {
       timestamp: Date.now(),
     });
     conversation.updatedAt = Date.now();
-    store.saveConversation(conversation);
+    await store.saveConversation(conversation);
   }
 
-  const env = context.env as Record<string, string | undefined>;
   const input: OrchestratorInput = {
     message,
     conversationId: conversationId || 'default',

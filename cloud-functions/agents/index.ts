@@ -5,23 +5,25 @@
  * POST: { action: 'get' | 'save' | 'delete', ... } manage agents
  */
 
-import { listAgents, getAgent, saveAgent, deleteAgent } from '../../shared/agents';
+import { getStore } from '../../shared/store';
 import type { AgentDefinition } from '../../shared/types';
 
 export async function onRequest(context: any) {
   const request = context.request;
   const method = request.method ?? 'GET';
+  const env = context.env as Record<string, string | undefined>;
+  const store = getStore(env);
 
   try {
     if (method === 'GET') {
-      return jsonResponse({ agents: listAgents() });
+      return jsonResponse({ agents: await store.listAgents() });
     }
 
     const body = request.body ?? {};
     const action = body.action ?? 'get';
 
     if (action === 'get') {
-      const agent = getAgent(body.id);
+      const agent = await store.getAgent(body.id);
       return jsonResponse({ agent: agent ?? null });
     }
 
@@ -30,16 +32,16 @@ export async function onRequest(context: any) {
       if (!agent?.id || !agent.name) {
         return jsonResponse({ error: 'agent.id and agent.name are required' }, 400);
       }
-      saveAgent({ ...agent, isBuiltIn: false });
-      return jsonResponse({ agent: getAgent(agent.id) });
+      await store.saveAgent({ ...agent, isBuiltIn: false });
+      return jsonResponse({ agent: await store.getAgent(agent.id) });
     }
 
     if (action === 'delete') {
-      const existing = getAgent(body.id);
+      const existing = await store.getAgent(body.id);
       if (existing?.isBuiltIn) {
         return jsonResponse({ error: 'Cannot delete built-in agent' }, 400);
       }
-      deleteAgent(body.id);
+      await store.deleteAgent(body.id);
       return jsonResponse({ success: true });
     }
 

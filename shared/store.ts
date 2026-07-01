@@ -9,6 +9,7 @@ import type {
   ImprovementProposal,
   Store,
 } from './types';
+import { KVStore } from './kvStore';
 
 /**
  * In-memory store implementation with a persistence-friendly interface.
@@ -477,9 +478,9 @@ class MemoryStore implements Store {
 
 let globalStore: Store | undefined;
 
-export function getStore(): Store {
+export function getStore(env?: Record<string, unknown>): Store {
   if (!globalStore) {
-    globalStore = new MemoryStore();
+    globalStore = env ? new KVStore(env) : new MemoryStore();
   }
   return globalStore;
 }

@@ -159,40 +159,40 @@ export interface OrchestratorPlan {
 
 export interface Store {
   // Agents
-  listAgents(): AgentDefinition[];
-  getAgent(id: string): AgentDefinition | undefined;
-  saveAgent(agent: AgentDefinition): void;
-  deleteAgent(id: string): void;
+  listAgents(): AgentDefinition[] | Promise<AgentDefinition[]>;
+  getAgent(id: string): AgentDefinition | undefined | Promise<AgentDefinition | undefined>;
+  saveAgent(agent: AgentDefinition): void | Promise<void>;
+  deleteAgent(id: string): void | Promise<void>;
 
   // Skills
-  listSkills(): SkillDefinition[];
-  getSkill(id: string): SkillDefinition | undefined;
-  saveSkill(skill: SkillDefinition): void;
-  deleteSkill(id: string): void;
+  listSkills(): SkillDefinition[] | Promise<SkillDefinition[]>;
+  getSkill(id: string): SkillDefinition | undefined | Promise<SkillDefinition | undefined>;
+  saveSkill(skill: SkillDefinition): void | Promise<void>;
+  deleteSkill(id: string): void | Promise<void>;
 
   // Knowledge bases
-  listKnowledgeBases(): KnowledgeBase[];
-  getKnowledgeBase(id: string): KnowledgeBase | undefined;
+  listKnowledgeBases(): KnowledgeBase[] | Promise<KnowledgeBase[]>;
+  getKnowledgeBase(id: string): KnowledgeBase | undefined | Promise<KnowledgeBase | undefined>;
 
   // Conversations
-  getConversation(id: string): Conversation | undefined;
-  saveConversation(conversation: Conversation): void;
-  listConversations(userId?: string): Conversation[];
-  deleteConversation(id: string): void;
+  getConversation(id: string): Conversation | undefined | Promise<Conversation | undefined>;
+  saveConversation(conversation: Conversation): void | Promise<void>;
+  listConversations(userId?: string): Conversation[] | Promise<Conversation[]>;
+  deleteConversation(id: string): void | Promise<void>;
 
   // Tasks
-  getTask(id: string): Task | undefined;
-  saveTask(task: Task): void;
-  listTasks(conversationId?: string): Task[];
+  getTask(id: string): Task | undefined | Promise<Task | undefined>;
+  saveTask(task: Task): void | Promise<void>;
+  listTasks(conversationId?: string): Task[] | Promise<Task[]>;
 
   // Reflections & evolution
-  saveReflection(reflection: AgentReflection): void;
-  listReflections(agentId?: string): AgentReflection[];
-  saveEvolution(evolution: AgentEvolution): void;
-  listEvolutions(agentId?: string): AgentEvolution[];
+  saveReflection(reflection: AgentReflection): void | Promise<void>;
+  listReflections(agentId?: string): AgentReflection[] | Promise<AgentReflection[]>;
+  saveEvolution(evolution: AgentEvolution): void | Promise<void>;
+  listEvolutions(agentId?: string): AgentEvolution[] | Promise<AgentEvolution[]>;
 
   // Improvement proposals (for self-improving the app)
-  saveProposal(proposal: ImprovementProposal): void;
-  listProposals(status?: ImprovementProposal['status']): ImprovementProposal[];
-  getProposal(id: string): ImprovementProposal | undefined;
+  saveProposal(proposal: ImprovementProposal): void | Promise<void>;
+  listProposals(status?: ImprovementProposal['status']): ImprovementProposal[] | Promise<ImprovementProposal[]>;
+  getProposal(id: string): ImprovementProposal | undefined | Promise<ImprovementProposal | undefined>;
 }

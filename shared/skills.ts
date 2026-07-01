@@ -31,7 +31,7 @@ const skillHandlers: Record<string, SkillHandler> = {
     const kbId = params.knowledgeBaseId ? String(params.knowledgeBaseId) : undefined;
     const store = getStore();
 
-    const kbs = kbId ? [store.getKnowledgeBase(kbId)].filter(Boolean) : store.listKnowledgeBases();
+    const kbs = kbId ? [(await store.getKnowledgeBase(kbId))] : (await store.listKnowledgeBases());
     const chunks: { documentId: string; fileName: string; snippet: string; score: number }[] = [];
 
     for (const kb of kbs) {
@@ -95,8 +95,8 @@ const skillHandlers: Record<string, SkillHandler> = {
     const agentId = String(params.agentId ?? '');
     const taskInput = String(params.taskInput ?? '');
     const output = String(params.output ?? '');
-    const store = getStore();
-    const agent = store.getAgent(agentId);
+    const store = getStore(env);
+    const agent = await store.getAgent(agentId);
     if (!agent) {
       throw new Error(`Agent not found: ${agentId}`);
     }
@@ -108,7 +108,7 @@ const skillHandlers: Record<string, SkillHandler> = {
       { role: 'user', content: prompt },
     ]);
 
-    let parsed: Partial<AgentReflection> = {};
+    let parsed: Partial<import('./types').AgentReflection> = {};
     try {
       parsed = JSON.parse(json.replace(/```json|```/g, '').trim());
     } catch {
@@ -120,7 +120,7 @@ const skillHandlers: Record<string, SkillHandler> = {
       agentId,
       taskInput,
       originalOutput: output,
-      assessment: (parsed.assessment ?? 'adequate') as AgentReflection['assessment'],
+      assessment: (parsed.assessment ?? 'adequate') as import('./types').AgentReflection['assessment'],
       strengths: Array.isArray(parsed.strengths) ? parsed.strengths : [],
       weaknesses: Array.isArray(parsed.weaknesses) ? parsed.weaknesses : [],
       improvements: Array.isArray(parsed.improvements) ? parsed.improvements : [],
@@ -129,25 +129,22 @@ const skillHandlers: Record<string, SkillHandler> = {
       timestamp: Date.now(),
     };
 
-    store.saveReflection(reflection);
+    await store.saveReflection(reflection);
     return { reflection };
   },
 
   evolveAgent: async (params, env) => {
     const agentId = String(params.agentId ?? '');
     const reflectionId = String(params.reflectionId ?? '');
-    const store = getStore();
-    const agent = store.getAgent(agentId);
-    const reflection = store.listReflections(agentId).find(r => r.id === reflectionId);
+    const store = getStore(env);
+    const agent = await store.getAgent(agentId);
+    const reflection = (await store.listReflections(agentId)).find(r => r.id === reflectionId);
 
     if (!agent) {
       throw new Error(`Agent not found: ${agentId}`);
     }
     if (!reflection) {
       throw new Error(`Reflection not found: ${reflectionId}`);
-    }
-    if (agent.isBuiltIn) {
-      // Built-in agents are allowed to evolve, but we preserve original by creating a new generation
     }
 
     const prompt = `你是智能体进化专家。请根据以下反思结果，优化 ${agent.name} 的 systemPrompt。\n\n当前 systemPrompt：\n"""${agent.systemPrompt}"""\n\n反思：\n- 优点：${reflection.strengths.join('；')}\n- 不足：${reflection.weaknesses.join('；')}\n- 改进建议：${reflection.improvements.join('；')}\n- 建议追加到 systemPrompt 的经验：${reflection.suggestedPromptDelta ?? '无'}\n\n请生成优化后的完整 systemPrompt，并说明修改理由。只返回 JSON 格式：{"newPrompt": "", "reason": ""}`;
@@ -170,7 +167,7 @@ const skillHandlers: Record<string, SkillHandler> = {
     // Only evolve if prompt actually changed
     if (newPrompt !== agent.systemPrompt) {
       const generation = (agent.generation ?? 0) + 1;
-      const evolution: AgentEvolution = {
+      const evolution: import('./types').AgentEvolution = {
         id: randomUUID(),
         agentId,
         generation,
@@ -180,8 +177,11 @@ const skillHandlers: Record<string, SkillHandler> = {
         triggeredByReflectionId: reflectionId,
         timestamp: Date.now(),
       };
-      store.saveEvolution(evolution);
+      await store.saveEvolution(evolution);
 
+      const validSuggestedSkills = await Promise.all(
+        (reflection.suggestedSkillIds ?? []).map(async id => ((await store.getSkill(id)) ? id : null))
+      );
       const updated: AgentDefinition = {
         ...agent,
         systemPrompt: newPrompt,
@@ -189,10 +189,10 @@ const skillHandlers: Record<string, SkillHandler> = {
         updatedAt: Date.now(),
         skillIds: Array.from(new Set([
           ...agent.skillIds,
-          ...(reflection.suggestedSkillIds ?? []).filter(id => store.getSkill(id)),
+          ...(validSuggestedSkills.filter(Boolean) as string[]),
         ])),
       };
-      store.saveAgent(updated);
+      await store.saveAgent(updated);
       return { evolved: true, generation, reason };
     }
 
@@ -202,10 +202,9 @@ const skillHandlers: Record<string, SkillHandler> = {
   createAgent: async (params, env) => {
     const description = String(params.description ?? '');
     const nameHint = String(params.name ?? '');
-    const roleHint = String(params.roleHint ?? 'custom');
-    const store = getStore();
+    const store = getStore(env);
 
-    const availableSkills = store.listSkills().map(s => `${s.id}：${s.name}`).join('\n');
+    const availableSkills = (await store.listSkills()).map(s => `${s.id}：${s.name}`).join('\n');
 
     const prompt = `你是一个智能体设计专家。请根据以下描述设计一个新的专项智能体。\n\n描述：${description}\n\n可选技能：\n${availableSkills}\n\n请返回 JSON 格式：\n{\n  "id": "agent_xxx",\n  "name": "智能体名称",\n  "avatar": "emoji",\n  "description": "简短描述",\n  "role": "custom",\n  "systemPrompt": "详细的 systemPrompt",\n  "skillIds": ["skill_id_1", "skill_id_2"]\n}`;
 
@@ -228,14 +227,16 @@ const skillHandlers: Record<string, SkillHandler> = {
       description: parsed.description ?? description,
       role: (parsed.role as AgentDefinition['role']) ?? 'custom',
       systemPrompt: parsed.systemPrompt ?? `你是 ${nameHint || parsed.name || '新智能体'}，${description}`,
-      skillIds: Array.isArray(parsed.skillIds) ? parsed.skillIds.filter(id => store.getSkill(id)) : ['skill_reflect', 'skill_evolve_agent'],
+      skillIds: Array.isArray(parsed.skillIds)
+        ? (await Promise.all(parsed.skillIds.map(async id => ((await store.getSkill(id)) ? id : null)))).filter(Boolean) as string[]
+        : ['skill_reflect', 'skill_evolve_agent'],
       isBuiltIn: false,
       generation: 0,
       createdAt: Date.now(),
       updatedAt: Date.now(),
     };
 
-    store.saveAgent(agent);
+    await store.saveAgent(agent);
     return { agent };
   },
 
@@ -282,16 +283,16 @@ const skillHandlers: Record<string, SkillHandler> = {
   },
 };
 
-export function listSkills(): SkillDefinition[] {
-  return getStore().listSkills();
+export async function listSkills(env?: Record<string, unknown>): Promise<SkillDefinition[]> {
+  return getStore(env).listSkills();
 }
 
-export function getSkill(id: string): SkillDefinition | undefined {
-  return getStore().getSkill(id);
+export async function getSkill(id: string, env?: Record<string, unknown>): Promise<SkillDefinition | undefined> {
+  return getStore(env).getSkill(id);
 }
 
 export async function executeSkill(skillId: string, params: Record<string, unknown>, env?: Record<string, string | undefined>): Promise<unknown> {
-  const skill = getSkill(skillId);
+  const skill = await getSkill(skillId, env);
   if (!skill) {
     throw new Error(`Skill not found: ${skillId}`);
   }
@@ -302,12 +303,12 @@ export async function executeSkill(skillId: string, params: Record<string, unkno
   return handler(params, env);
 }
 
-export function getSkillDescriptionsForAgent(skillIds: string[]): string {
-  return skillIds
-    .map(id => {
-      const skill = getSkill(id);
+export async function getSkillDescriptionsForAgent(skillIds: string[], env?: Record<string, unknown>): Promise<string> {
+  const descriptions = await Promise.all(
+    skillIds.map(async id => {
+      const skill = await getSkill(id, env);
       return skill ? `- ${skill.name}：${skill.description}` : '';
     })
-    .filter(Boolean)
-    .join('\n');
+  );
+  return descriptions.filter(Boolean).join('\n');
 }

@@ -16,22 +16,23 @@ import type { ImprovementProposal } from '../../shared/types';
 export async function onRequest(context: any) {
   const request = context.request;
   const method = request.method ?? 'GET';
-  const store = getStore();
+  const env = context.env as Record<string, string | undefined>;
+  const store = getStore(env);
 
   try {
     if (method === 'GET') {
       const params = request.query ?? request.body ?? {};
       if (params.id) {
-        return jsonResponse({ proposal: store.getProposal(String(params.id)) ?? null });
+        return jsonResponse({ proposal: (await store.getProposal(String(params.id))) ?? null });
       }
       const status = params.status as ImprovementProposal['status'] | undefined;
-      return jsonResponse({ proposals: store.listProposals(status) });
+      return jsonResponse({ proposals: await store.listProposals(status) });
     }
 
     if (method === 'POST') {
       const body = request.body ?? {};
       const action = body.action ?? 'get';
-      const proposal = store.getProposal(String(body.id));
+      const proposal = await store.getProposal(String(body.id));
       if (!proposal) {
         return jsonResponse({ error: 'Proposal not found' }, 404);
       }
@@ -45,7 +46,7 @@ export async function onRequest(context: any) {
         return jsonResponse({ error: `Unknown action: ${action}` }, 400);
       }
 
-      store.saveProposal(proposal);
+      await store.saveProposal(proposal);
       return jsonResponse({ proposal });
     }
 
