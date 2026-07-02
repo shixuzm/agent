@@ -1,11 +1,32 @@
-import type { AgentDefinition, OrchestratorInput, Task, ImprovementProposal, Conversation } from './types';
+import type { AgentDefinition, OrchestratorInput, Task, ImprovementProposal } from './types';
 import { getAgent, getSpecialistAgents } from './agents';
 import { chatCompletion, type ChatMessage } from './llm';
 import { getSkillDescriptionsForAgent, executeSkill } from './skills';
 import { getStore } from './store';
 import { getGlobalMemoryStore } from './memory/store.js';
-import { loadCheckpoint, saveCheckpoint } from './memory/checkpoint.js';
 import { randomUUID } from '../agents/_utils';
+import { createBudget, estimateTokens, getContextWindow, shouldRebuildContext } from './context/budget.js';
+import { rebuildContext } from './context/rebuild.js';
+import { loadCheckpoint, maybeSaveCheckpoint } from './context/checkpoint.js';
+import { getActiveTaskTree, summarizeTaskProgress } from './context/tasks.js';
+
+function parseEnvNumber(env: Record<string, string | undefined>, key: string): number | undefined {
+  const raw = env[key];
+  if (raw === undefined || raw === '') return undefined;
+  const value = Number(raw);
+  return Number.isNaN(value) ? undefined : value;
+}
+
+function buildBudgetOptions(env: Record<string, string | undefined>) {
+  return {
+    contextWindow: parseEnvNumber(env, 'CONTEXT_WINDOW'),
+    checkpointThreshold: parseEnvNumber(env, 'CHECKPOINT_THRESHOLD'),
+    rebuildThreshold: parseEnvNumber(env, 'REBUILD_THRESHOLD'),
+    recentMessagesRatio: parseEnvNumber(env, 'RECENT_MESSAGES_RATIO'),
+    memoryRatio: parseEnvNumber(env, 'MEMORY_RATIO'),
+    taskProgressRatio: parseEnvNumber(env, 'TASK_PROGRESS_RATIO'),
+  };
+}
 
 export interface OrchestratorResult {
   agentId: string;
@@ -13,6 +34,11 @@ export interface OrchestratorResult {
   taskId: string;
   reasoning: string;
   response: string;
+  tokenUsage?: {
+    input: number;
+    output: number;
+    total: number;
+  };
 }
 
 /**
@@ -80,30 +106,34 @@ export async function selectAgent(
 }
 
 /**
- * Execute a single agent task.
+ * Execute a single agent task using the provided message context.
  */
 export async function executeAgentTask(
   env: Record<string, string | undefined>,
   agent: AgentDefinition,
   taskInput: string,
-  conversationContext: string,
-  memoryContext: string = '',
+  messages: ChatMessage[],
+  options?: { maxTokens?: number },
 ): Promise<string> {
   const skillDescriptions = await getSkillDescriptionsForAgent(agent.skillIds, env);
 
-  const systemPrompt = [
-    agent.systemPrompt,
-    `你可以使用以下技能（当前为模拟实现，如需调用可在回复中说明）：\n${skillDescriptions}`,
-    memoryContext,
-    '直接给出最终答案，保持简洁。',
-  ].filter(Boolean).join('\n\n');
+  const skillMessage: ChatMessage = {
+    role: 'system',
+    content: `你可以使用以下技能（当前为模拟实现，如需调用可在回复中说明）：\n${skillDescriptions}\n\n直接给出最终答案，保持简洁。`,
+  };
 
-  const messages = [
-    { role: 'system' as const, content: systemPrompt },
-    { role: 'user' as const, content: `对话上下文：\n${conversationContext}\n\n当前任务：${taskInput}` },
+  const taskMessages: ChatMessage[] = [
+    ...messages,
+    skillMessage,
+    { role: 'user', content: `当前任务：${taskInput}` },
   ];
 
-  return chatCompletion(env, messages, agent.modelConfig);
+  const modelConfig = agent.modelConfig ? { ...agent.modelConfig } : undefined;
+  if (options?.maxTokens !== undefined) {
+    modelConfig!.maxTokens = options.maxTokens;
+  }
+
+  return chatCompletion(env, taskMessages, modelConfig);
 }
 
 /**
@@ -207,74 +237,6 @@ export async function createAgentFromDescription(
   return result.agent;
 }
 
-const MAX_MEMORY_ITEM_LENGTH = 200;
-const MAX_MEMORY_CONTEXT_LENGTH = 2000;
-
-function truncateMemoryItem(title: string, content: string): string {
-  const text = `${title}: ${content}`;
-  return text.length > MAX_MEMORY_ITEM_LENGTH ? `${text.slice(0, MAX_MEMORY_ITEM_LENGTH)}...` : text;
-}
-
-function buildMemoryContext(checkpointText: string | null, relevantMemories: string): string {
-  const parts: string[] = [];
-  if (checkpointText) {
-    parts.push(`## Conversation Checkpoint\n${checkpointText}`);
-  }
-  if (relevantMemories) {
-    parts.push(`## Relevant Memories\n${relevantMemories}`);
-  }
-  let context = parts.join('\n\n');
-  if (context.length > MAX_MEMORY_CONTEXT_LENGTH) {
-    context = `${context.slice(0, MAX_MEMORY_CONTEXT_LENGTH)}\n\n...`;
-  }
-  return context;
-}
-
-const checkpointUpdateCounters = new Map<string, number>();
-
-function shouldUpdateCheckpoint(conversation: Conversation, conversationId: string): boolean {
-  if (conversation.messages.length <= 2) return false;
-  const userMessageCount = conversation.messages.filter(m => m.role === 'user').length;
-  const lastUpdatedCount = checkpointUpdateCounters.get(conversationId) ?? 0;
-  if (userMessageCount - lastUpdatedCount >= 3) {
-    checkpointUpdateCounters.set(conversationId, userMessageCount);
-    return true;
-  }
-  return false;
-}
-
-async function updateCheckpoint(
-  env: Record<string, string | undefined>,
-  conversation: Conversation | undefined,
-): Promise<string | null> {
-  if (!conversation || !shouldUpdateCheckpoint(conversation, conversation.id)) {
-    return null;
-  }
-
-  const store = getStore(env);
-  const agent = await store.getAgent('agent_checkpoint_writer');
-  if (!agent) {
-    return null;
-  }
-
-  const historyText = conversation.messages
-    .slice(-20)
-    .map(m => `${m.role}: ${m.content}`)
-    .join('\n');
-
-  const messages: ChatMessage[] = [
-    { role: 'system', content: agent.systemPrompt },
-    { role: 'user', content: historyText },
-  ];
-
-  try {
-    return await chatCompletion(env, messages, agent.modelConfig);
-  } catch (e) {
-    console.error('[checkpoint] failed to generate:', e);
-    return null;
-  }
-}
-
 /**
  * Plan a complex task into subtasks and execute them.
  * MVP: only decomposes when explicitly requested or when the message contains multiple distinct tasks.
@@ -286,26 +248,65 @@ export async function planAndExecute(
   const store = getStore(env);
   const conversation = await store.getConversation(input.conversationId);
   const contextMessages = conversation?.messages ?? [];
-  const contextText = contextMessages
-    .slice(-10)
-    .map(m => `${m.role}: ${m.content}`)
-    .join('\n');
 
-  // 注入检查点与相关记忆
-  const memoryStore = await getGlobalMemoryStore().catch(() => null);
-  let checkpointText: string | null = null;
-  let relevantMemories = '';
+  // 计算每条消息的 token 使用量
+  for (const message of contextMessages) {
+    if (!message.tokenCount) {
+      message.tokenCount = estimateTokens(message.content);
+    }
+  }
+  const usedTokens = contextMessages.reduce((sum, m) => sum + (m.tokenCount ?? estimateTokens(m.content)), 0);
 
-  if (memoryStore?.isEnabled()) {
-    checkpointText = loadCheckpoint(memoryStore, input.conversationId);
-
-    const searchResults = memoryStore.searchMemories(input.message, { limit: 5 });
-    relevantMemories = searchResults
-      .map(r => `- ${truncateMemoryItem(r.memory.title, r.memory.content)}`)
-      .join('\n');
+  // 确定模型名称和上下文窗口
+  const preferredAgent = input.preferredAgentId ? await getAgent(input.preferredAgentId, env) : undefined;
+  const modelName = preferredAgent?.modelConfig?.modelId ?? conversation?.modelName ?? '@makers/deepseek-v4-flash';
+  if (conversation) {
+    conversation.modelName = conversation.modelName ?? modelName;
+    conversation.contextWindow = conversation.contextWindow ?? getContextWindow(conversation.modelName);
   }
 
-  const memoryContext = buildMemoryContext(checkpointText, relevantMemories);
+  // 创建预算
+  const budget = createBudget(modelName, usedTokens, buildBudgetOptions(env));
+
+  // 自动保存检查点
+  if (conversation) {
+    await maybeSaveCheckpoint(env, conversation, budget);
+  }
+
+  // 加载检查点和任务进展
+  const checkpointText = await loadCheckpoint(input.conversationId);
+  const activeTree = await getActiveTaskTree(store, input.conversationId);
+  const taskProgressText = activeTree ? summarizeTaskProgress(activeTree) : null;
+
+  // 上下文重建或保留最近消息
+  const memoryStore = await getGlobalMemoryStore().catch(() => null);
+  let messagesForTask: ChatMessage[];
+  let contextTokenUsage = {
+    checkpoint: 0,
+    taskProgress: 0,
+    memory: 0,
+    recentMessages: 0,
+    systemPrompt: 0,
+  };
+
+  if (shouldRebuildContext(budget, contextMessages)) {
+    const selectedAgent = preferredAgent ?? (await getAgent('agent_super', env));
+    const rebuilt = await rebuildContext({
+      budget,
+      checkpointText,
+      taskProgressText,
+      memoryStore,
+      userInput: input.message,
+      recentMessages: contextMessages,
+      systemPrompt: selectedAgent?.systemPrompt ?? 'You are a helpful assistant.',
+    });
+    messagesForTask = rebuilt.messages.map(m => ({ role: m.role as ChatMessage['role'], content: m.content }));
+    contextTokenUsage = rebuilt.tokenUsage;
+  } else {
+    const recent = contextMessages.slice(-10);
+    messagesForTask = recent.map(m => ({ role: m.role as ChatMessage['role'], content: m.content }));
+    contextTokenUsage.recentMessages = recent.reduce((sum, m) => sum + (m.tokenCount ?? estimateTokens(m.content)), 0);
+  }
 
   // Handle explicit self-improvement / code improvement requests
   const lowerInput = input.message.toLowerCase();
@@ -384,6 +385,7 @@ export async function planAndExecute(
   const taskId = randomUUID();
   const task: Task = {
     id: taskId,
+    conversationId: input.conversationId,
     agentId: agent.id,
     status: 'running',
     input: input.message,
@@ -394,7 +396,7 @@ export async function planAndExecute(
   // Step 3: execute task
   let response: string;
   try {
-    response = await executeAgentTask(env, agent, input.message, contextText, memoryContext);
+    response = await executeAgentTask(env, agent, input.message, messagesForTask);
     task.status = 'completed';
     task.output = response;
     task.completedAt = Date.now();
@@ -423,20 +425,8 @@ export async function planAndExecute(
   // Step 5: trigger self-growth asynchronously
   triggerSelfGrowth(env, agent.id, input.message, response, taskId, input.conversationId);
 
-  // 异步更新 checkpoint，不阻塞响应
-  void (async () => {
-    try {
-      const checkpointMemoryStore = await getGlobalMemoryStore();
-      if (checkpointMemoryStore?.isEnabled()) {
-        const checkpointContent = await updateCheckpoint(env, conversation);
-        if (checkpointContent) {
-          saveCheckpoint(checkpointMemoryStore, input.conversationId, checkpointContent);
-        }
-      }
-    } catch (e) {
-      console.error('[checkpoint] update failed:', e);
-    }
-  })();
+  const estimatedInputTokens = Object.values(contextTokenUsage).reduce((sum, v) => sum + v, 0);
+  const estimatedOutputTokens = estimateTokens(response);
 
   return {
     agentId: agent.id,
@@ -444,5 +434,10 @@ export async function planAndExecute(
     taskId,
     reasoning,
     response,
+    tokenUsage: {
+      input: estimatedInputTokens,
+      output: estimatedOutputTokens,
+      total: estimatedInputTokens + estimatedOutputTokens,
+    },
   };
 }

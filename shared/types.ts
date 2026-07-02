@@ -11,12 +11,13 @@ export const SKILL_IDS = {
 } as const;
 
 export interface ModelConfig {
-  provider: 'makers' | 'openai' | 'anthropic' | 'custom';
-  modelId: string;
+  provider?: 'makers' | 'openai' | 'anthropic' | 'custom';
+  modelId?: string;
   baseUrl?: string;
   apiKey?: string;
   temperature?: number;
   maxTokens?: number;
+  contextWindow?: number;
 }
 
 export interface SkillDefinition {
@@ -105,9 +106,12 @@ export interface Document {
 
 export interface Task {
   id: string;
+  conversationId?: string;
   parentTaskId?: string;
+  subTaskIds?: string[];
   agentId: string;
-  status: 'pending' | 'running' | 'completed' | 'failed';
+  status: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
+  progress?: number;
   input: string;
   output?: string;
   dependencies?: string[];
@@ -137,6 +141,13 @@ export interface Conversation {
   messages: Message[];
   createdAt: number;
   updatedAt: number;
+  modelName?: string;
+  contextWindow?: number;
+  tokenUsage?: {
+    input: number;
+    output: number;
+    total: number;
+  };
 }
 
 export interface Message {
@@ -149,6 +160,7 @@ export interface Message {
   toolCalls?: ToolCall[];
   metadata?: Record<string, unknown>;
   timestamp: number;
+  tokenCount?: number;
 }
 
 export interface ToolCall {

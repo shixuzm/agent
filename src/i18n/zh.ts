@@ -117,6 +117,15 @@ const zh = {
   "settings.memory.clear": "清空所有记忆",
   "settings.memory.clearConfirm": "确定要永久清空所有记忆吗？此操作不可恢复。",
   "settings.memory.clearSuccess": "所有记忆已清空。",
+
+  // ─── 上下文管理 ──────────────────────────────────────────────────────
+  "settings.context.title": "上下文管理",
+  "settings.context.window": "上下文窗口大小（tokens）",
+  "settings.context.checkpointThreshold": "检查点阈值",
+  "settings.context.rebuildThreshold": "上下文重建阈值",
+  "settings.context.recentMessagesRatio": "近期消息预算比例",
+  "settings.context.memoryRatio": "记忆注入预算比例",
+  "settings.context.taskProgressRatio": "任务进展注入预算比例",
 } as const;
 
 export default zh;

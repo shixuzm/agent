@@ -29,6 +29,7 @@ import type {
   AgentDefinition,
   SkillDefinition,
 } from './types';
+import { getAppConfig } from './lib/appConfig';
 
 export const API = {
   chat: '/chat',
@@ -167,6 +168,19 @@ export async function fetchConversationHistory(
  *
  * 完成后将 user + assistant 两条消息写回 MemoryStore，以便后续 history / listConversations 读取。
  */
+function buildBudgetOptionsFromAppConfig() {
+  const config = getAppConfig();
+  if (!config) return {};
+  return {
+    contextWindow: config.contextWindow,
+    checkpointThreshold: config.checkpointThreshold,
+    rebuildThreshold: config.rebuildThreshold,
+    recentMessagesRatio: config.recentMessagesRatio,
+    memoryRatio: config.memoryRatio,
+    taskProgressRatio: config.taskProgressRatio,
+  };
+}
+
 async function runDirectChatStream(
   message: string,
   callbacks: StreamCallbacks,
@@ -191,26 +205,40 @@ async function runDirectChatStream(
     // 2. 准备对话上下文（最近 10 条 user/assistant 消息）
     const convId = conversationId ?? 'default';
     const existingConv = await store.getConversation(convId);
-    const historyMessages = (existingConv?.messages ?? [])
+    const historyMessages: import('../shared/types').Message[] = (existingConv?.messages ?? [])
       .filter(m => m.role === 'user' || m.role === 'assistant')
-      .slice(-10)
-      .map(m => ({
-        role: m.role as 'user' | 'assistant',
-        content: m.content,
-      }));
+      .slice(-10);
 
-    // 2.5 直连模式下也尝试注入 checkpoint（记忆模块在桌面/本地可用）
-    let checkpointText: string | null = null;
-    try {
-      const { getGlobalMemoryStore } = await import('../shared/memory/store');
-      const memoryStore = await getGlobalMemoryStore();
-      if (memoryStore?.isEnabled()) {
-        const { loadCheckpoint } = await import('../shared/memory/checkpoint');
-        checkpointText = loadCheckpoint(memoryStore, convId);
-      }
-    } catch (e) {
-      console.warn('[direct-chat] failed to load checkpoint:', e);
+    const modelName = agent.modelConfig?.modelId ?? existingConv?.modelName ?? '@makers/deepseek-v4-flash';
+
+    const [{ createBudget, estimateTokens: estimateTokensFn, getContextWindow }, { rebuildContext: rebuildContextFn }, { loadCheckpoint }, { getActiveTaskTree, summarizeTaskProgress }, { getGlobalMemoryStore }] = await Promise.all([
+      import('../shared/context/budget.js'),
+      import('../shared/context/rebuild.js'),
+      import('../shared/context/checkpoint.js'),
+      import('../shared/context/tasks.js'),
+      import('../shared/memory/store.js'),
+    ]);
+
+    for (const m of historyMessages) {
+      m.tokenCount = m.tokenCount ?? estimateTokensFn(m.content);
     }
+    const usedTokens = historyMessages.reduce((sum, m) => sum + (m.tokenCount ?? estimateTokensFn(m.content)), 0);
+
+    const budget = createBudget(modelName, usedTokens, buildBudgetOptionsFromAppConfig());
+    const checkpointText = await loadCheckpoint(convId);
+    const activeTree = await getActiveTaskTree(store, convId);
+    const taskProgressText = activeTree ? summarizeTaskProgress(activeTree) : null;
+    const memoryStore = await getGlobalMemoryStore().catch(() => null);
+
+    const rebuilt = await rebuildContextFn({
+      budget,
+      checkpointText,
+      taskProgressText,
+      memoryStore,
+      userInput: message,
+      recentMessages: historyMessages,
+      systemPrompt: agent.systemPrompt,
+    });
 
     // 3. 发送 agent_selected 事件（让 UI 显示当前使用的智能体）
     if (callbacks.onAgentSelected) {
@@ -230,13 +258,8 @@ async function runDirectChatStream(
     }
 
     // 4. 调用 chatCompletion（非流式）
-    const messages: import('../shared/llm').ChatMessage[] = [
-      { role: 'system', content: agent.systemPrompt },
-    ];
-    if (checkpointText) {
-      messages.push({ role: 'system', content: `## Conversation Checkpoint\n${checkpointText}` });
-    }
-    messages.push(...historyMessages, { role: 'user', content: message });
+    const messages = rebuilt.messages.map(m => ({ role: m.role, content: m.content })) as import('../shared/llm').ChatMessage[];
+    messages.push({ role: 'user', content: message });
 
     const response = await chatCompletion({}, messages, agent.modelConfig);
 
@@ -276,6 +299,7 @@ async function runDirectChatStream(
         role: 'user',
         content: message,
         timestamp: now,
+        tokenCount: estimateTokensFn(message),
       },
       {
         id: options?.botMsgId ?? `msg-${now}-a`,
@@ -284,9 +308,19 @@ async function runDirectChatStream(
         content: response,
         agentId: agent.id,
         timestamp: now + 1,
+        tokenCount: estimateTokensFn(response),
       },
     );
     conv.updatedAt = now;
+    conv.modelName = conv.modelName ?? modelName;
+    conv.contextWindow = conv.contextWindow ?? getContextWindow(modelName);
+    const inputTokens = rebuilt.tokenUsage.checkpoint + rebuilt.tokenUsage.taskProgress + rebuilt.tokenUsage.memory + rebuilt.tokenUsage.recentMessages + rebuilt.tokenUsage.systemPrompt + estimateTokensFn(message);
+    const outputTokens = estimateTokensFn(response);
+    conv.tokenUsage = {
+      input: inputTokens,
+      output: outputTokens,
+      total: inputTokens + outputTokens,
+    };
     await store.saveConversation(conv);
 
     // 7. 发送 done 事件

@@ -5,9 +5,31 @@ export interface AppConfig {
   dsparkEndpoint: string;
   dsparkApiKey: string;
   dsparkDefaultCluster: string;
+  // Context management
+  contextWindow?: number;
+  checkpointThreshold?: number;
+  rebuildThreshold?: number;
+  recentMessagesRatio?: number;
+  memoryRatio?: number;
+  taskProgressRatio?: number;
 }
 
 const STORAGE_KEY = 'app_settings';
+
+const DEFAULT_CONFIG: AppConfig = {
+  aiGatewayApiKey: '',
+  aiGatewayBaseUrl: '',
+  aiGatewayModel: '',
+  dsparkEndpoint: '',
+  dsparkApiKey: '',
+  dsparkDefaultCluster: '',
+  contextWindow: 32000,
+  checkpointThreshold: 0.55,
+  rebuildThreshold: 0.80,
+  recentMessagesRatio: 0.45,
+  memoryRatio: 0.10,
+  taskProgressRatio: 0.10,
+};
 
 /**
  * 从 localStorage 读取应用配置。
@@ -21,12 +43,8 @@ export function getAppConfig(): AppConfig | null {
     const parsed = JSON.parse(raw) as Partial<AppConfig>;
     if (!parsed || typeof parsed !== 'object') return null;
     return {
-      aiGatewayApiKey: parsed.aiGatewayApiKey ?? '',
-      aiGatewayBaseUrl: parsed.aiGatewayBaseUrl ?? '',
-      aiGatewayModel: parsed.aiGatewayModel ?? '',
-      dsparkEndpoint: parsed.dsparkEndpoint ?? '',
-      dsparkApiKey: parsed.dsparkApiKey ?? '',
-      dsparkDefaultCluster: parsed.dsparkDefaultCluster ?? '',
+      ...DEFAULT_CONFIG,
+      ...parsed,
     };
   } catch {
     return null;
@@ -78,5 +96,11 @@ export function appConfigToEnv(config: AppConfig | null): Record<string, string 
     DSPARK_ENDPOINT: config.dsparkEndpoint || undefined,
     DSPARK_API_KEY: config.dsparkApiKey || undefined,
     DSPARK_DEFAULT_CLUSTER: config.dsparkDefaultCluster || undefined,
+    CONTEXT_WINDOW: config.contextWindow !== undefined ? String(config.contextWindow) : undefined,
+    CHECKPOINT_THRESHOLD: config.checkpointThreshold !== undefined ? String(config.checkpointThreshold) : undefined,
+    REBUILD_THRESHOLD: config.rebuildThreshold !== undefined ? String(config.rebuildThreshold) : undefined,
+    RECENT_MESSAGES_RATIO: config.recentMessagesRatio !== undefined ? String(config.recentMessagesRatio) : undefined,
+    MEMORY_RATIO: config.memoryRatio !== undefined ? String(config.memoryRatio) : undefined,
+    TASK_PROGRESS_RATIO: config.taskProgressRatio !== undefined ? String(config.taskProgressRatio) : undefined,
   };
 }

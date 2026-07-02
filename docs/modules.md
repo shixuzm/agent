@@ -7,6 +7,7 @@
 | 前端 UI | `src/` | React + TypeScript + Vite | 用户界面、聊天交互、设置页面 |
 | 核心逻辑 | `shared/` | TypeScript | 智能体管理、技能执行、会话存储 |
 | 记忆存储 | `shared/memory/` | TypeScript + SQLite/FTS5/sql.js | 本地持久化记忆、FTS5 全文检索、Markdown 双向同步 |
+| 上下文管理 | `shared/context/` | TypeScript | Token 预算、上下文重建、自动检查点、树状任务 |
 | checkpoint-writer | `shared/orchestrator.ts` | TypeScript | 自动维护会话检查点的子智能体 |
 | LLM 适配 | `shared/llm.ts` | TypeScript + OpenAI SDK | 调用 LLM 服务（DeepSeek/GPT等） |
 | DSpark 适配 | `shared/dspark.ts` | TypeScript + fetch | 调用 DSpark 数据分析框架 |
@@ -31,8 +32,19 @@
   │     └── OpenAI SDK
   ├── DSpark 适配 (shared/dspark.ts)
   │     └── fetch API
-  └── 核心逻辑 (shared/store.ts)
-        └── MemoryStore (浏览器) / KVStore (EdgeOne)
+  ├── 核心逻辑 (shared/store.ts)
+  │     └── MemoryStore (浏览器) / KVStore (EdgeOne)
+  └── 上下文管理 (shared/context/)
+        ├── 预算分配 (budget.ts)
+        ├── 检查点 (checkpoint.ts)
+        ├── 上下文重建 (rebuild.ts)
+        └── 树状任务 (tasks.ts)
+
+上下文管理 (shared/context/)
+  ├── orchestrator ── 调用预算与重建逻辑
+  ├── chat ── 长会话触发检查点/重建
+  ├── memory ── 注入相关记忆
+  └── tasks ── 注入任务进展
 
 平台壳层
   ├── Electron (electron/) → 加载 dist/

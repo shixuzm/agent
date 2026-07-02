@@ -681,10 +681,7 @@ Keep it under 300 words. Do not include greetings or explanations.`,
   listTasks(conversationId?: string): Task[] {
     const all = Array.from(this.tasks.values());
     if (!conversationId) return all;
-    return all.filter(() => {
-      // Task does not store conversationId directly in type; keep simple for now.
-      return true;
-    });
+    return all.filter(t => t.conversationId === conversationId);
   }
 
   // Scheduled tasks

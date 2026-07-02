@@ -13,9 +13,21 @@ import { createLogger } from '../_logger';
 import { sseResponse } from '../_sse';
 import { planAndExecute, type OrchestratorInput } from '../../shared/orchestrator';
 import { getStore } from '../../shared/store';
+import { estimateTokens, getContextWindow } from '../../shared/context/budget.js';
 import { randomUUID } from '../_utils';
+import type { Conversation } from '../../shared/types';
 
 const logger = createLogger('chat');
+
+function createConversation(id: string, userId?: string): Conversation {
+  return {
+    id,
+    userId,
+    messages: [],
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  };
+}
 
 export async function onRequest(context: any) {
   const body = context.request.body ?? {};
@@ -41,28 +53,25 @@ export async function onRequest(context: any) {
   const store = getStore(env);
 
   // Ensure conversation exists in our store
-  let conversation = conversationId ? await store.getConversation(conversationId) : undefined;
-  if (!conversation && conversationId) {
-    conversation = {
-      id: conversationId,
-      userId,
-      messages: [],
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    };
-    await store.saveConversation(conversation);
-  }
+  const conversation = conversationId
+    ? (await store.getConversation(conversationId)) ?? createConversation(conversationId, userId)
+    : undefined;
 
   // Record user message
+  const userMessage = {
+    id: randomUUID(),
+    conversationId: conversation?.id ?? conversationId ?? 'default',
+    role: 'user' as const,
+    content: message,
+    timestamp: Date.now(),
+    tokenCount: estimateTokens(message),
+  };
+
   if (conversation) {
-    conversation.messages.push({
-      id: randomUUID(),
-      conversationId: conversation.id,
-      role: 'user',
-      content: message,
-      timestamp: Date.now(),
-    });
+    conversation.messages.push(userMessage);
     conversation.updatedAt = Date.now();
+    conversation.modelName = conversation.modelName ?? body.modelName ?? '@makers/deepseek-v4-flash';
+    conversation.contextWindow = conversation.contextWindow ?? getContextWindow(conversation.modelName);
     await store.saveConversation(conversation);
   }
 
@@ -77,6 +86,14 @@ export async function onRequest(context: any) {
     async function* () {
       try {
         const result = await planAndExecute(env, input);
+
+        // Persist token usage and metadata if conversation exists
+        if (conversation && result.tokenUsage) {
+          conversation.tokenUsage = result.tokenUsage;
+          conversation.modelName = conversation.modelName ?? body.modelName ?? '@makers/deepseek-v4-flash';
+          conversation.contextWindow = conversation.contextWindow ?? getContextWindow(conversation.modelName);
+          await store.saveConversation(conversation);
+        }
 
         // Yield structured metadata event first
         yield {

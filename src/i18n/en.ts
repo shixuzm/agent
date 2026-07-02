@@ -117,6 +117,15 @@ const en = {
   "settings.memory.clear": "Clear all memories",
   "settings.memory.clearConfirm": "Permanently clear all memories? This cannot be undone.",
   "settings.memory.clearSuccess": "All memories cleared.",
+
+  // ─── Context management ──────────────────────────────────────────────
+  "settings.context.title": "Context",
+  "settings.context.window": "Context Window Size (tokens)",
+  "settings.context.checkpointThreshold": "Checkpoint Threshold",
+  "settings.context.rebuildThreshold": "Rebuild Threshold",
+  "settings.context.recentMessagesRatio": "Recent Messages Ratio",
+  "settings.context.memoryRatio": "Memory Injection Ratio",
+  "settings.context.taskProgressRatio": "Task Progress Injection Ratio",
 } as const;
 
 export default en;

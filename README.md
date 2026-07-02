@@ -31,6 +31,17 @@ When a session resumes, the agent automatically injects relevant memories into t
 
 Memory is available in desktop (Electron) and local Node.js environments. Cloud (EdgeOne Functions) and pure browser builds gracefully fall back to in-memory storage.
 
+## Intelligent Context Management
+
+The agent manages long-running conversations with token budgets:
+
+- **Automatic checkpoints**: saves a session summary when token usage crosses the checkpoint threshold.
+- **Context rebuild**: when approaching the context window limit, the agent rebuilds context from the latest checkpoint, task progress, relevant memories, and recent messages.
+- **Budgeted injection**: checkpoint, task progress, and memory are injected under strict token budgets, sorted by relevance and priority.
+- **Tree tasks**: tasks support nested sub-tasks (T1, T1.1, T1.2…), and task state is preserved across checkpoints.
+
+Configure thresholds in Settings → Context Management.
+
 ## Usage
 
 This template supports two usage modes: **Cloud** and **Local**.

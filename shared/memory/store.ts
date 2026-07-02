@@ -1,6 +1,8 @@
 import { createMemoryDb, CreateMemoryDbOptions, SqliteEngine } from './sqlite.js';
 import { Memory, MemoryType, SearchResult, MemoryStats } from './types.js';
 
+export type { SearchResult } from './types.js';
+
 export interface MemoryStoreCreateOptions extends CreateMemoryDbOptions {
   syncDir?: string;
 }

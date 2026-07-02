@@ -1,0 +1,21 @@
+# Checklist
+
+- [x] 已调研当前 Task / Conversation / Message 类型与存储接口
+- [x] 已确认当前 token 估算与模型上下文窗口配置情况
+- [x] `shared/types.ts` 已扩展树状任务字段（parentTaskId、subTaskIds、status、progress）
+- [x] `shared/types.ts` 已为 Conversation 添加上下文窗口、模型、token 使用元数据
+- [x] `shared/context/budget.ts` 已实现 token 预算管理
+- [x] `shared/context/rebuild.ts` 已实现上下文重建逻辑
+- [x] `shared/context/checkpoint.ts` 已实现基于预算的自动检查点触发
+- [x] `shared/context/tasks.ts` 已实现树状任务系统（创建子任务、获取任务树、汇总进展）
+- [x] `shared/store.ts` 的 Task 方法已支持父子任务查询
+- [x] `shared/orchestrator.ts` 已集成 token 计算、自动检查点、上下文重建、预算化注入
+- [x] `agents/chat/index.ts` 已保存会话 token 元数据并复用上下文重建逻辑
+- [x] `src/api.ts` 直连模式已复用上下文重建逻辑
+- [x] SettingsPanel 已添加「上下文管理」配置区域
+- [x] `docs/modules.md` 已添加上下文管理模块说明
+- [x] README.md / README_zh-CN.md 已更新智能上下文管理说明
+- [x] `npx tsc --noEmit` 无类型错误
+- [x] `scripts/test-context-management.js` 测试通过
+- [x] `npm run build` Web 构建成功
+- [x] `npm run build:desktop` 桌面端构建成功
