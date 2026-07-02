@@ -2,9 +2,6 @@ export interface AppConfig {
   aiGatewayApiKey: string;
   aiGatewayBaseUrl: string;
   aiGatewayModel: string;
-  dsparkEndpoint: string;
-  dsparkApiKey: string;
-  dsparkDefaultCluster: string;
   // Context management
   contextWindow?: number;
   checkpointThreshold?: number;
@@ -20,9 +17,6 @@ const DEFAULT_CONFIG: AppConfig = {
   aiGatewayApiKey: '',
   aiGatewayBaseUrl: '',
   aiGatewayModel: '',
-  dsparkEndpoint: '',
-  dsparkApiKey: '',
-  dsparkDefaultCluster: '',
   contextWindow: 32000,
   checkpointThreshold: 0.55,
   rebuildThreshold: 0.80,
@@ -93,9 +87,6 @@ export function appConfigToEnv(config: AppConfig | null): Record<string, string 
     AI_GATEWAY_API_KEY: config.aiGatewayApiKey || undefined,
     AI_GATEWAY_BASE_URL: config.aiGatewayBaseUrl || undefined,
     AI_GATEWAY_MODEL: config.aiGatewayModel || undefined,
-    DSPARK_ENDPOINT: config.dsparkEndpoint || undefined,
-    DSPARK_API_KEY: config.dsparkApiKey || undefined,
-    DSPARK_DEFAULT_CLUSTER: config.dsparkDefaultCluster || undefined,
     CONTEXT_WINDOW: config.contextWindow !== undefined ? String(config.contextWindow) : undefined,
     CHECKPOINT_THRESHOLD: config.checkpointThreshold !== undefined ? String(config.checkpointThreshold) : undefined,
     REBUILD_THRESHOLD: config.rebuildThreshold !== undefined ? String(config.rebuildThreshold) : undefined,

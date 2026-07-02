@@ -49,9 +49,6 @@ export function SettingsPanel({ onClose, firstRun }: SettingsPanelProps) {
   const [aiGatewayApiKey, setAiGatewayApiKey] = useState('');
   const [aiGatewayBaseUrl, setAiGatewayBaseUrl] = useState(DEFAULT_BASE_URL);
   const [aiGatewayModel, setAiGatewayModel] = useState(DEFAULT_MODEL);
-  const [dsparkEndpoint, setDsparkEndpoint] = useState('');
-  const [dsparkApiKey, setDsparkApiKey] = useState('');
-  const [dsparkDefaultCluster, setDsparkDefaultCluster] = useState('');
 
   const [status, setStatus] = useState<{ kind: 'ok' | 'warn' | null; text: string }>({ kind: null, text: '' });
   const [activeTab, setActiveTab] = useState<'general' | 'memory' | 'context'>('general');
@@ -75,9 +72,6 @@ export function SettingsPanel({ onClose, firstRun }: SettingsPanelProps) {
     setAiGatewayApiKey(config.aiGatewayApiKey);
     setAiGatewayBaseUrl(config.aiGatewayBaseUrl || DEFAULT_BASE_URL);
     setAiGatewayModel(config.aiGatewayModel || DEFAULT_MODEL);
-    setDsparkEndpoint(config.dsparkEndpoint);
-    setDsparkApiKey(config.dsparkApiKey);
-    setDsparkDefaultCluster(config.dsparkDefaultCluster);
     setContextWindow(config.contextWindow ?? 32000);
     setCheckpointThreshold(config.checkpointThreshold ?? 0.55);
     setRebuildThreshold(config.rebuildThreshold ?? 0.80);
@@ -112,9 +106,6 @@ export function SettingsPanel({ onClose, firstRun }: SettingsPanelProps) {
       aiGatewayApiKey: aiGatewayApiKey.trim(),
       aiGatewayBaseUrl: aiGatewayBaseUrl.trim() || DEFAULT_BASE_URL,
       aiGatewayModel: aiGatewayModel.trim() || DEFAULT_MODEL,
-      dsparkEndpoint: dsparkEndpoint.trim(),
-      dsparkApiKey: dsparkApiKey.trim(),
-      dsparkDefaultCluster: dsparkDefaultCluster.trim(),
       contextWindow: Math.max(1024, contextWindow),
       checkpointThreshold: clamp(checkpointThreshold, 0, 1),
       rebuildThreshold: clamp(rebuildThreshold, 0, 1),
@@ -136,9 +127,6 @@ export function SettingsPanel({ onClose, firstRun }: SettingsPanelProps) {
     setAiGatewayApiKey('');
     setAiGatewayBaseUrl(DEFAULT_BASE_URL);
     setAiGatewayModel(DEFAULT_MODEL);
-    setDsparkEndpoint('');
-    setDsparkApiKey('');
-    setDsparkDefaultCluster('');
     setContextWindow(32000);
     setCheckpointThreshold(0.55);
     setRebuildThreshold(0.80);
@@ -244,34 +232,6 @@ export function SettingsPanel({ onClose, firstRun }: SettingsPanelProps) {
                   value={aiGatewayModel}
                   onChange={(e) => setAiGatewayModel(e.target.value)}
                   placeholder={DEFAULT_MODEL}
-                />
-              </label>
-
-              <p className={styles.optional}>DSpark (optional)</p>
-
-              <label>
-                <span>{t('settings.dsparkEndpoint')}</span>
-                <input
-                  type="text"
-                  value={dsparkEndpoint}
-                  onChange={(e) => setDsparkEndpoint(e.target.value)}
-                />
-              </label>
-              <label>
-                <span>{t('settings.dsparkApiKey')}</span>
-                <input
-                  type="password"
-                  value={dsparkApiKey}
-                  onChange={(e) => setDsparkApiKey(e.target.value)}
-                  autoComplete="off"
-                />
-              </label>
-              <label>
-                <span>{t('settings.dsparkCluster')}</span>
-                <input
-                  type="text"
-                  value={dsparkDefaultCluster}
-                  onChange={(e) => setDsparkDefaultCluster(e.target.value)}
                 />
               </label>
 

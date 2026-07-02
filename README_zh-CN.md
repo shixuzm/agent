@@ -91,15 +91,24 @@ cp .env.example .env
 | `AI_GATEWAY_MODEL` | 否 | 模型 ID。默认 `@makers/deepseek-v4-flash`（内置免费模型）。 |
 | `VITE_APP_MODE` | 否 | 运行模式。`cloud` 显示登录、Demo 和本地下载入口；`local`（默认）启用完整聊天与管理功能。 |
 | `VITE_DIRECT_LLM` | 否 | 设置为 `true` 时，前端直接调用 LLM 服务，无需后端。移动端构建时自动启用。 |
-| `DSPARK_ENDPOINT` | 否 | DSpark 服务地址。启用 **DSpark 数据分析** 技能时必须配置。 |
-| `DSPARK_API_KEY` | 否 | DSpark 服务认证用的 API Key。 |
-| `DSPARK_DEFAULT_CLUSTER` | 否 | 请求中未指定集群时使用的默认 DSpark 集群。 |
-
-使用 **DSpark 数据分析** 技能前，需将 `DSPARK_ENDPOINT` 配置为可用的 DSpark 服务地址。`DSPARK_API_KEY` 和 `DSPARK_DEFAULT_CLUSTER` 为可选项，分别用于服务认证与指定默认集群。在 AgentsPanel 中为智能体勾选 **DSpark 数据分析** 技能，然后在对话中直接请求数据分析任务即可。
 
 模板遵循 OpenAI 兼容协议，可以指向 Makers Models，也可以指向任意 OpenAI 兼容的服务商。
 
-### 如何获取 `AI_GATEWAY_API_KEY`
+## 使用 MNN 进行端侧推理
+
+本项目使用阿里巴巴 MNN 框架实现应用内端侧推理加速。与服务端框架不同，MNN 直接在本地运行，可降低延迟并保护数据隐私。
+
+### 主要特性
+
+- **零配置**：MNN 内置默认设置，无需 API Key 或服务端点。
+- **跨平台后端**：在 Node.js / Electron 下自动选择 CPU 后端，在浏览器中自动选择 WASM 后端。
+- **技能集成**：绑定 `skill_mnn` 的智能体可通过自然语言触发本地推理。
+
+### 当前状态
+
+MNN 适配模块（`shared/mnn.ts`）当前为 TypeScript 占位实现。会话创建、输入预处理、输出后处理接口已就绪；实际的 MNN 原生/WASM 后端可在后续接入，无需修改技能或智能体 API。
+
+## 如何获取 `AI_GATEWAY_API_KEY`
 
 1. 打开 [Makers 控制台](https://console.cloud.tencent.com/edgeone/makers)。
 2. 登录并开通 Makers。
@@ -130,7 +139,6 @@ npm run dev
 - 移动端无需配置环境变量，所有 API 配置均在应用内设置页面完成。
 - 首次打开应用会自动引导到设置页面。
 - 需配置 **AI Gateway API Key**（必填），以及 **Base URL** 和 **Model**。
-- 可选配置 **DSpark Endpoint**，用于启用 DSpark 数据分析技能。
 
 ## 构建移动端应用
 

@@ -5,9 +5,6 @@ interface DesktopConfig {
   aiGatewayApiKey: string;
   aiGatewayBaseUrl: string;
   aiGatewayModel: string;
-  dsparkEndpoint: string;
-  dsparkApiKey: string;
-  dsparkDefaultCluster: string;
 }
 
 const store = new Store<DesktopConfig>({
@@ -15,9 +12,6 @@ const store = new Store<DesktopConfig>({
     aiGatewayApiKey: '',
     aiGatewayBaseUrl: 'https://ark.cn-beijing.volces.com/api/v3',
     aiGatewayModel: '@makers/deepseek-v4-flash',
-    dsparkEndpoint: '',
-    dsparkApiKey: '',
-    dsparkDefaultCluster: '',
   },
 });
 

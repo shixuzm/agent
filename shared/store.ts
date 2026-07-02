@@ -350,47 +350,30 @@ export class MemoryStore implements Store {
         handler: 'scheduler',
       },
       {
-        id: 'skill_dspark',
-        name: 'DSpark 数据分析',
-        description: '通过 DSpark 框架执行 Spark SQL 或脚本，完成数据分析、批处理、ETL 任务',
+        id: 'skill_mnn',
+        name: 'MNN 端侧推理',
+        description: '在应用内调用 MNN 端侧推理加速',
         version: '1.0.0',
         inputSchema: {
           type: 'object',
           properties: {
-            action: {
-              type: 'string',
-              enum: ['submit', 'status', 'result'],
-              description: '操作类型：提交任务、查询状态、获取结果',
-            },
-            sqlOrScript: {
-              type: 'string',
-              description: 'Spark SQL 或脚本，action=submit 时必填',
-            },
-            jobId: {
-              type: 'string',
-              description: '任务 ID，action=status/result 时必填',
-            },
-            cluster: {
-              type: 'string',
-              description: '可选的 DSpark 集群名称',
-            },
-            params: {
-              type: 'object',
-              description: '可选的任务参数',
-            },
+            input: { type: 'object' },
+            modelPath: { type: 'string' },
+            backend: { type: 'string', enum: ['cpu', 'gpu', 'wasm'] },
           },
-          required: ['action'],
+          required: ['input'],
         },
         outputSchema: {
           type: 'object',
           properties: {
-            jobId: { type: 'string' },
-            status: { type: 'string' },
-            result: { type: 'object' },
+            output: { type: 'object' },
+            backend: { type: 'string' },
+            latencyMs: { type: 'number' },
             error: { type: 'string' },
+            code: { type: 'string' },
           },
         },
-        handler: 'dspark',
+        handler: 'mnn',
       },
     ];
 
@@ -434,7 +417,7 @@ export class MemoryStore implements Store {
           'skill_list_project',
           'skill_dialogue_assistant',
           'skill_workflow_orchestrator',
-          'skill_dspark',
+          'skill_mnn',
         ],
         isBuiltIn: true,
         generation: 0,
@@ -524,17 +507,17 @@ export class MemoryStore implements Store {
         id: 'agent_data_analyst',
         name: '数据分析师',
         avatar: '📊',
-        description: '擅长使用 DSpark 进行数据分析和统计计算',
+        description: '擅长使用 MNN 端侧推理进行数据分析和统计计算',
         role: 'custom',
         systemPrompt:
-          '你是数据分析师智能体。擅长使用 DSpark 进行数据分析、统计计算与批处理任务。\n' +
-          '- 根据用户的数据分析需求，编写清晰、高效的 Spark SQL 或脚本。\n' +
-          '- 使用 DSpark 技能提交任务、跟踪状态并获取结果。\n' +
+          '你是数据分析师智能体。擅长使用 MNN 端侧推理进行数据分析、统计计算与轻量推理任务。\n' +
+          '- 根据用户的数据分析需求，构造合适的输入数据并调用 MNN 端侧推理技能。\n' +
+          '- 使用 MNN 技能完成推理、跟踪执行延迟并获取结果。\n' +
           '- 对分析结果进行解读，输出简洁、数据驱动的结论与可视化建议。\n' +
           '- 在必要时读取相关文件或生成报告。\n' +
           '\n' +
           '自我成长：每次任务结束后，你会反思分析思路与输出质量，持续优化分析策略与提示。',
-        skillIds: ['skill_dspark', 'skill_dialogue_assistant', 'skill_file_handler'],
+        skillIds: ['skill_mnn', 'skill_dialogue_assistant', 'skill_file_handler'],
         isBuiltIn: true,
         generation: 0,
         createdAt: now,

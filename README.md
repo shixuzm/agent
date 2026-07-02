@@ -91,15 +91,24 @@ At minimum, set `AI_GATEWAY_API_KEY` and `AI_GATEWAY_BASE_URL`. See the [Environ
 | `AI_GATEWAY_MODEL` | No | Model ID. Defaults to `@makers/deepseek-v4-flash` (a free built-in model). |
 | `VITE_APP_MODE` | No | Runtime mode. `cloud` shows login, demo, and local download entry. `local` (default) enables full chat and management features. |
 | `VITE_DIRECT_LLM` | No | When set to `true`, the frontend calls the LLM service directly without requiring a backend. Automatically enabled for mobile app builds. |
-| `DSPARK_ENDPOINT` | No | DSpark service endpoint. Required to enable the **DSpark Data Analysis** skill. |
-| `DSPARK_API_KEY` | No | API key for DSpark service authentication. |
-| `DSPARK_DEFAULT_CLUSTER` | No | Default DSpark cluster to use when not specified in a request. |
-
-To use the **DSpark Data Analysis** skill, set `DSPARK_ENDPOINT` to a working DSpark service endpoint. `DSPARK_API_KEY` and `DSPARK_DEFAULT_CLUSTER` are optional for authentication and default cluster selection. In the AgentsPanel, enable the **DSpark Data Analysis** skill for your agent, then ask for data-analysis tasks in chat.
 
 This template follows the OpenAI-compatible standard — point these at Makers Models or any compatible provider.
 
-### How to get `AI_GATEWAY_API_KEY`
+## On-Device Inference with MNN
+
+This project uses Alibaba MNN for on-device inference acceleration. Unlike server-side frameworks, MNN runs locally inside the app, reducing latency and keeping data private.
+
+### Key Features
+
+- **Zero configuration**: MNN is built-in with default settings; no API keys or endpoints are required.
+- **Cross-platform backend**: automatically selects CPU backend on Node.js/Electron and WASM backend in browsers.
+- **Skill integration**: agents with the `skill_mnn` can trigger local inference through natural language.
+
+### Current Status
+
+The MNN adapter (`shared/mnn.ts`) currently ships as a TypeScript placeholder. The session creation, input preprocessing, and output postprocessing interfaces are ready; the actual MNN native/WASM backend can be plugged in later without changing the skill or agent APIs.
+
+## How to get `AI_GATEWAY_API_KEY`
 
 1. Open the [Makers Console](https://edgeone.ai/makers/new?s_url=https://console.tencentcloud.com/edgeone/makers).
 2. Sign in and enable Makers.
@@ -130,7 +139,6 @@ This template also ships as mobile apps for three platforms: **Android**, **iOS*
 - No environment variables are required for mobile builds — all API configuration is done in the in-app settings page.
 - On first launch, the app automatically guides you to the settings page.
 - You must configure the **AI Gateway API Key** (required), as well as the **Base URL** and **Model**.
-- Optionally, configure the **DSpark Endpoint** to enable the DSpark Data Analysis skill.
 
 ## Build Mobile Apps
 

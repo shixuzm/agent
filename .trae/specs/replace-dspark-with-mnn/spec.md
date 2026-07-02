@@ -5,12 +5,12 @@
 
 ## What Changes
 - 移除 `shared/dspark.ts` 及相关 DSpark 适配代码。
-- 新增 MNN 端侧推理适配模块 `shared/mnn.ts`，封装模型加载、输入预处理、推理执行、结果后处理。
+- 新增 MNN 端侧推理适配模块 `shared/mnn.ts`，完全内置默认配置，无需环境变量。
 - 将 `shared/skills.ts` 中的 `dspark` skill handler 替换为 `mnn` handler。
 - 在 `shared/store.ts` 中将 `skill_dspark` 替换为 `skill_mnn`，并调整 `agent_super` 的技能绑定。
-- 更新 `.env.example`，移除 DSpark 相关配置，添加 MNN 相关配置说明。
-- 更新 `README.md`，说明 MNN 端侧推理能力、配置要求与平台限制。
-- **BREAKING**: 移除对 `DSPARK_ENDPOINT` 等环境变量的依赖；原有的 DSpark skill 调用方需要迁移到 MNN skill。
+- 从 `.env.example` 中移除 DSpark 和 MNN 相关环境变量配置。
+- 更新 `README.md`，说明 MNN 端侧推理能力、内置默认配置与平台限制。
+- **BREAKING**: 移除对 `DSPARK_ENDPOINT` 等环境变量的依赖；MNN 默认内置配置，无需用户配置。
 
 ## Impact
 - Affected specs: 技能体系、智能体能力、环境配置、项目文档、端侧推理能力。
@@ -18,18 +18,23 @@
 
 ## ADDED Requirements
 ### Requirement: MNN 端侧推理适配模块
-The system SHALL 提供一个 MNN 适配模块，封装端侧模型加载、输入预处理、推理执行、结果后处理。
+The system SHALL 提供一个 MNN 适配模块，封装端侧模型加载、输入预处理、推理执行、结果后处理；模块完全内置默认配置，不依赖任何环境变量。
 
 #### Scenario: 初始化 MNN 推理会话
-- **WHEN** 系统读取到 `MNN_MODEL_PATH` 等环境变量
+- **WHEN** 技能被调用或会话首次需要端侧推理
 - **THEN** 根据平台（Node.js / Electron / 浏览器）加载合适的 MNN 后端
-- **AND** 创建并缓存 MNN 推理会话
+- **AND** 使用内置默认模型路径/配置创建并缓存 MNN 推理会话
 
 #### Scenario: 执行端侧推理
 - **WHEN** 调用 `runInference(inputTensor, options)`
 - **THEN** 对输入进行预处理
 - **AND** 调用 MNN 执行推理
 - **AND** 对输出进行后处理并返回
+
+#### Scenario: 无环境变量配置
+- **WHEN** 用户未设置任何 MNN 环境变量
+- **THEN** MNN 模块仍可使用内置默认值初始化
+- **AND** 仅在模型文件缺失或平台不支持时给出明确提示
 
 ### Requirement: MNN 技能
 The system SHALL 提供 `skill_mnn` 技能，允许智能体通过自然语言调用端侧 MNN 推理。

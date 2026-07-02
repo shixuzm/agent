@@ -2,7 +2,7 @@
  * 应用配置提供器：允许前端在运行时注入 env 配置，
  * 避免 shared 模块直接依赖前端的 localStorage 实现。
  *
- * shared 中的 llm.ts、dspark.ts、store.ts 都通过 `getEnvFromProvider()`
+ * shared 中的 llm.ts、store.ts 都通过 `getEnvFromProvider()`
  * 合并 env，使得前端在浏览器环境（无 process.env）下也能使用应用内配置。
  */
 

@@ -10,7 +10,7 @@
 | 上下文管理 | `shared/context/` | TypeScript | Token 预算、上下文重建、自动检查点、树状任务 |
 | checkpoint-writer | `shared/orchestrator.ts` | TypeScript | 自动维护会话检查点的子智能体 |
 | LLM 适配 | `shared/llm.ts` | TypeScript + OpenAI SDK | 调用 LLM 服务（DeepSeek/GPT等） |
-| DSpark 适配 | `shared/dspark.ts` | TypeScript + fetch | 调用 DSpark 数据分析框架 |
+| MNN 端侧推理 | `shared/mnn.ts` | TypeScript | 端侧推理适配（当前为占位实现） |
 | 配置桥接 | `shared/configProvider.ts` | TypeScript | 前端配置注入到 shared 模块 |
 | 应用配置 | `src/lib/appConfig.ts` | TypeScript | localStorage 配置持久化 |
 | 桌面壳 | `electron/` | Electron + TypeScript | Windows/macOS/Linux 桌面应用容器 |
@@ -30,8 +30,8 @@
   │     └── 注入到 shared 模块
   ├── LLM 适配 (shared/llm.ts)
   │     └── OpenAI SDK
-  ├── DSpark 适配 (shared/dspark.ts)
-  │     └── fetch API
+  ├── MNN 端侧推理 (shared/mnn.ts)
+  │     └── 占位实现，后续可接入原生/WASM 后端
   ├── 核心逻辑 (shared/store.ts)
   │     └── MemoryStore (浏览器) / KVStore (EdgeOne)
   └── 上下文管理 (shared/context/)

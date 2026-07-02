@@ -5,7 +5,7 @@ import { SKILL_IDS } from './types';
 import { getStore } from './store';
 import { chatCompletion } from './llm';
 import { randomUUID } from '../agents/_utils';
-import { createDSparkClient, DSparkError } from './dspark';
+import { runInference, MNNError } from './mnn';
 
 export type SkillHandler = (params: Record<string, unknown>, env?: Record<string, string | undefined>) => Promise<unknown>;
 
@@ -501,30 +501,21 @@ const skillHandlers: Record<string, SkillHandler> = {
     return { error: `Unsupported action: ${action}` };
   },
 
-  dspark: async (params, env) => {
+  mnn: async (params) => {
     try {
-      const client = createDSparkClient(env ?? {});
-      const action = params.action as 'submit' | 'status' | 'result';
-      if (action === 'submit') {
-        const sqlOrScript = params.sqlOrScript as string;
-        const options = {
-          cluster: params.cluster as string | undefined,
-          params: params.params as Record<string, unknown> | undefined,
-        };
-        return client.submitJob(sqlOrScript, options);
-      }
-      if (action === 'status') {
-        const jobId = params.jobId as string;
-        return client.getJobStatus(jobId);
-      }
-      if (action === 'result') {
-        const jobId = params.jobId as string;
-        return client.getJobResult(jobId);
-      }
-      throw new Error(`Unsupported DSpark action: ${action}`);
+      const input = params.input;
+      const result = await runInference(input, {
+        modelPath: params.modelPath ? String(params.modelPath) : undefined,
+        backend: params.backend as 'cpu' | 'gpu' | 'wasm' | undefined,
+      });
+      return {
+        output: result.output,
+        backend: result.backend,
+        latencyMs: result.latencyMs,
+      };
     } catch (e) {
-      if (e instanceof DSparkError) {
-        return { error: `DSpark service error (${e.statusCode}): ${e.message}`, details: e.responseText };
+      if (e instanceof MNNError) {
+        return { error: e.message, code: e.code, detail: e.detail };
       }
       return { error: e instanceof Error ? e.message : String(e) };
     }
