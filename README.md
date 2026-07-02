@@ -42,6 +42,34 @@ The agent manages long-running conversations with token budgets:
 
 Configure thresholds in Settings → Context Management.
 
+## Settings & Compose Mode
+
+The Settings panel provides centralized configuration:
+
+- **Provider & Model**: choose your LLM provider, model, API key, and base URL.
+- **Agents**: manage built-in agent permissions and create custom agents.
+- **Context**: configure context window, checkpoint threshold, and budget ratios.
+- **Memory**: view memory stats and clear all memories (desktop only).
+- **MCP Servers**: connect to Model Context Protocol servers for additional tools.
+- **Shortcuts & Theme**: customize keyboard shortcuts and switch between light/dark/system themes.
+
+### Compose Mode
+
+Use `/compose <spec>` to start a specs-driven development lifecycle:
+
+1. Plan — understand the spec and split it into tasks.
+2. Execute — call skills/subagents to implement code.
+3. Review — review code and results.
+4. TDD — generate and run tests.
+5. Debug — diagnose and fix failures.
+6. Validate — run checklist, type checks, and build verification.
+7. Merge — finalize and summarize.
+
+Additional commands:
+
+- `/dream` — extract persistent knowledge from recent sessions into project memory.
+- `/distill` — discover repetitive manual workflows and propose reusable skills/subagents/commands.
+
 ## Usage
 
 This template supports two usage modes: **Cloud** and **Local**.

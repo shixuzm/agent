@@ -375,6 +375,74 @@ export class MemoryStore implements Store {
         },
         handler: 'mnn',
       },
+      {
+        id: 'skill_dream',
+        name: 'Dream 知识提取',
+        description: '扫描近期会话并提取持久知识到项目记忆',
+        version: '1.0.0',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            conversationIds: { type: 'array', items: { type: 'string' } },
+            lookbackDays: { type: 'number' },
+          },
+        },
+        outputSchema: {
+          type: 'object',
+          properties: {
+            added: { type: 'number' },
+            updated: { type: 'number' },
+            removed: { type: 'number' },
+            summary: { type: 'string' },
+          },
+        },
+        handler: 'dream',
+      },
+      {
+        id: 'skill_distill',
+        name: 'Distill 工作流提炼',
+        description: '从近期工作中发现重复手动流程并生成可复用提案',
+        version: '1.0.0',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            lookbackDays: { type: 'number' },
+          },
+        },
+        outputSchema: {
+          type: 'object',
+          properties: {
+            proposals: { type: 'array' },
+            summary: { type: 'string' },
+          },
+        },
+        handler: 'distill',
+      },
+      {
+        id: 'skill_compose',
+        name: 'Compose 编排',
+        description: '启动 Compose 编排模式，从 spec 到交付推进开发流程',
+        version: '1.0.0',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            spec: { type: 'string' },
+            goal: { type: 'string' },
+            autoExecute: { type: 'boolean' },
+            maxSteps: { type: 'number' },
+          },
+          required: ['spec'],
+        },
+        outputSchema: {
+          type: 'object',
+          properties: {
+            plan: { type: 'object' },
+            completed: { type: 'boolean' },
+            summary: { type: 'string' },
+          },
+        },
+        handler: 'compose',
+      },
     ];
 
     for (const skill of skills) {
@@ -543,6 +611,38 @@ Keep it under 300 words. Do not include greetings or explanations.`,
           provider: 'makers',
           modelId: '@makers/deepseek-v4-flash',
         },
+        isBuiltIn: true,
+        generation: 0,
+        createdAt: now,
+        updatedAt: now,
+      },
+      {
+        id: 'agent_compose',
+        name: 'Compose 编排员',
+        avatar: '🎼',
+        description: '从 spec 到交付的完整开发生命周期编排员',
+        role: 'super',
+        systemPrompt: `你是 Compose 编排员，负责从 spec 到交付的完整开发生命周期。
+
+你的工作流程：
+1. 规划（plan）：理解 spec，拆分任务并制定执行计划。
+2. 执行（execute）：调用合适的 skills/subagents 完成代码实现。
+3. 审查（review）：对代码和结果进行审查，给出反馈。
+4. TDD：生成或运行测试，确保实现符合预期。
+5. 调试（debug）：诊断并修复失败或错误。
+6. 验证（validate）：核对检查清单、类型检查和构建验证。
+7. 合并（merge）：收尾并生成最终总结。
+
+每次进入新阶段时，简要说明当前阶段目标和预期输出。`,
+        skillIds: [
+          'skill_compose',
+          'skill_workflow_orchestrator',
+          'skill_content_generator',
+          'skill_file_handler',
+          'skill_code_execution',
+          'skill_dream',
+          'skill_distill',
+        ],
         isBuiltIn: true,
         generation: 0,
         createdAt: now,

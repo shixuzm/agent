@@ -8,6 +8,8 @@
 | 核心逻辑 | `shared/` | TypeScript | 智能体管理、技能执行、会话存储 |
 | 记忆存储 | `shared/memory/` | TypeScript + SQLite/FTS5/sql.js | 本地持久化记忆、FTS5 全文检索、Markdown 双向同步 |
 | 上下文管理 | `shared/context/` | TypeScript | Token 预算、上下文重建、自动检查点、树状任务 |
+| Compose 编排 | `shared/compose/` | TypeScript | 从 spec 到交付的完整开发生命周期编排 |
+| Dream/Distill | `shared/dream.ts`, `shared/distill.ts` | TypeScript | 知识提取与工作流提炼 |
 | checkpoint-writer | `shared/orchestrator.ts` | TypeScript | 自动维护会话检查点的子智能体 |
 | LLM 适配 | `shared/llm.ts` | TypeScript + OpenAI SDK | 调用 LLM 服务（DeepSeek/GPT等） |
 | MNN 端侧推理 | `shared/mnn.ts` | TypeScript | 端侧推理适配（当前为占位实现） |
@@ -45,6 +47,16 @@
   ├── chat ── 长会话触发检查点/重建
   ├── memory ── 注入相关记忆
   └── tasks ── 注入任务进展
+
+Compose 编排 (shared/compose/)
+  ├── orchestrator ── 调度 spec 生命周期阶段
+  ├── chat ── 接收 /compose 命令并返回结果
+  └── skills ── 调用工具实现各阶段任务
+
+Dream/Distill (shared/dream.ts, shared/distill.ts)
+  ├── chat ── 接收 /dream 与 /distill 命令
+  ├── memory ── 写入提炼后的知识与工作流
+  └── skills ── 分析近期会话并生成 reusable 产物
 
 平台壳层
   ├── Electron (electron/) → 加载 dist/

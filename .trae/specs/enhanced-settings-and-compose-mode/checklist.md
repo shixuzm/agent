@@ -1,0 +1,22 @@
+# Checklist
+
+- [x] 已调研现有 SettingsPanel、appConfig、store、skills、types、chat、i18n
+- [x] `AppConfig` 已扩展 provider、modelId、theme、shortcuts、agents、mcps 等字段
+- [x] SettingsPanel 已实现左侧分类导航
+- [x] SettingsPanel 已实现「Provider 和模型选择」面板
+- [x] SettingsPanel 已实现「Agent 权限和自定义 Agent」面板
+- [x] SettingsPanel 已实现「检查点和记忆行为」面板
+- [x] SettingsPanel 已实现「MCP 服务器连接」面板
+- [x] SettingsPanel 已实现「快捷键和主题」面板
+- [x] `shared/dream.ts` 已实现 `/dream` 知识提取
+- [x] `shared/distill.ts` 已实现 `/distill` 工作流提炼
+- [x] `/dream` 和 `/distill` 命令已在 chat 入口注册
+- [x] `shared/compose/` 各阶段模块已实现（planner/executor/reviewer/tdd/debugger/validator/merger）
+- [x] `shared/compose/index.ts` 已串联 Compose 编排流程
+- [x] `agent_compose` 已在 `shared/store.ts` 注册
+- [x] `/compose <spec>` 命令已在 chat 入口识别
+- [x] `src/i18n/en.ts` 和 `src/i18n/zh.ts` 已更新
+- [x] `docs/modules.md` 和 README 已更新
+- [x] `npx tsc --noEmit` 无类型错误
+- [x] `npm run build` Web 构建成功
+- [x] `npm run build:desktop` 桌面端构建成功

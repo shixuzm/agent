@@ -27,6 +27,7 @@
   "build": {
     "appId": "com.ai.agent",
     "productName": "AI Agent",
+    "publish": null,
     "directories": {
       "output": "release"
     },

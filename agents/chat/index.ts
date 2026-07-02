@@ -16,6 +16,9 @@ import { getStore } from '../../shared/store';
 import { estimateTokens, getContextWindow } from '../../shared/context/budget.js';
 import { randomUUID } from '../_utils';
 import type { Conversation } from '../../shared/types';
+import { runDream } from '../../shared/dream.js';
+import { runDistill } from '../../shared/distill.js';
+import { runCompose } from '../../shared/compose/index.js';
 
 const logger = createLogger('chat');
 
@@ -51,6 +54,48 @@ export async function onRequest(context: any) {
 
   const env = context.env as Record<string, string | undefined>;
   const store = getStore(env);
+
+  // Slash commands: knowledge extraction and workflow distillation
+  if (message.trim() === '/dream') {
+    const result = await runDream({ store, env, conversationIds: [conversationId] });
+    return new Response(JSON.stringify({ response: result.summary }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  if (message.trim() === '/distill') {
+    const result = await runDistill({ store, env });
+    const text = result.proposals
+      .map(p => `- [${p.type}] ${p.name} (${Math.round(p.confidence * 100)}%)`)
+      .join('\n');
+    return new Response(JSON.stringify({ response: result.summary + '\n' + text }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  if (message.trim().startsWith('/compose')) {
+    const spec = message.replace('/compose', '').trim();
+    if (!spec) {
+      return new Response(
+        JSON.stringify({ response: '请提供 spec，例如 /compose 实现一个登录功能' }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
+      );
+    }
+
+    const composeOptions = {
+      autoExecute: false,
+      maxSteps: 20,
+      requireApproval: true,
+    };
+
+    const result = await runCompose(env, store, spec, undefined, composeOptions);
+    return new Response(
+      JSON.stringify({ response: result.summary, composePlan: result.plan }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } },
+    );
+  }
 
   // Ensure conversation exists in our store
   const conversation = conversationId

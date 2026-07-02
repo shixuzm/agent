@@ -1,28 +1,92 @@
+export interface MCPServerConfig {
+  id: string;
+  name: string;
+  command?: string;
+  args?: string[];
+  env?: Record<string, string>;
+  enabled?: boolean;
+}
+
+export interface CustomAgentConfig {
+  id: string;
+  name: string;
+  description: string;
+  systemPrompt: string;
+  role: 'coder' | 'writer' | 'researcher' | 'reviewer' | 'custom';
+  skillIds: string[];
+  toolPermissions?: string[];
+}
+
 export interface AppConfig {
   aiGatewayApiKey: string;
   aiGatewayBaseUrl: string;
   aiGatewayModel: string;
-  // Context management
+
+  // Provider 与模型选择
+  provider?: 'makers' | 'openai' | 'anthropic' | 'custom';
+  modelId?: string;
+  apiKey?: string;
+  baseUrl?: string;
+  temperature?: number;
+  maxTokens?: number;
+
+  // 上下文管理
   contextWindow?: number;
   checkpointThreshold?: number;
   rebuildThreshold?: number;
   recentMessagesRatio?: number;
   memoryRatio?: number;
   taskProgressRatio?: number;
+
+  // Agent 权限和自定义 Agent
+  customAgents?: CustomAgentConfig[];
+  agentOverrides?: Record<string, { toolPermissions?: string[]; skillIds?: string[] }>;
+
+  // MCP 服务器
+  mcpServers?: MCPServerConfig[];
+
+  // 快捷键和主题
+  theme?: 'light' | 'dark' | 'system';
+  language?: 'zh' | 'en';
+  shortcuts?: Record<string, string>;
+
+  // Compose 模式
+  composeEnabled?: boolean;
+  composeAutoExecute?: boolean;
+  composeMaxSteps?: number;
 }
 
 const STORAGE_KEY = 'app_settings';
 
-const DEFAULT_CONFIG: AppConfig = {
+export const DEFAULT_CONFIG: AppConfig = {
   aiGatewayApiKey: '',
   aiGatewayBaseUrl: '',
   aiGatewayModel: '',
+  provider: 'makers',
+  modelId: '@makers/deepseek-v4-flash',
+  apiKey: '',
+  baseUrl: '',
+  temperature: 0.7,
+  maxTokens: 2048,
   contextWindow: 32000,
   checkpointThreshold: 0.55,
   rebuildThreshold: 0.80,
   recentMessagesRatio: 0.45,
   memoryRatio: 0.10,
   taskProgressRatio: 0.10,
+  customAgents: [],
+  agentOverrides: {},
+  mcpServers: [],
+  theme: 'system',
+  language: 'zh',
+  shortcuts: {
+    newChat: 'Mod+Shift+N',
+    openSettings: 'Mod+,',
+    toggleTheme: 'Mod+Shift+L',
+  },
+  composeEnabled: true,
+  composeAutoExecute: false,
+  composeMaxSteps: 20,
 };
 
 /**
@@ -39,6 +103,8 @@ export function getAppConfig(): AppConfig | null {
     return {
       ...DEFAULT_CONFIG,
       ...parsed,
+      shortcuts: { ...DEFAULT_CONFIG.shortcuts, ...parsed.shortcuts },
+      agentOverrides: { ...DEFAULT_CONFIG.agentOverrides, ...parsed.agentOverrides },
     };
   } catch {
     return null;
@@ -87,11 +153,28 @@ export function appConfigToEnv(config: AppConfig | null): Record<string, string 
     AI_GATEWAY_API_KEY: config.aiGatewayApiKey || undefined,
     AI_GATEWAY_BASE_URL: config.aiGatewayBaseUrl || undefined,
     AI_GATEWAY_MODEL: config.aiGatewayModel || undefined,
+    PROVIDER: config.provider || undefined,
+    MODEL_ID: config.modelId || undefined,
+    API_KEY: config.apiKey || undefined,
+    BASE_URL: config.baseUrl || undefined,
+    TEMPERATURE: config.temperature !== undefined ? String(config.temperature) : undefined,
+    MAX_TOKENS: config.maxTokens !== undefined ? String(config.maxTokens) : undefined,
     CONTEXT_WINDOW: config.contextWindow !== undefined ? String(config.contextWindow) : undefined,
     CHECKPOINT_THRESHOLD: config.checkpointThreshold !== undefined ? String(config.checkpointThreshold) : undefined,
     REBUILD_THRESHOLD: config.rebuildThreshold !== undefined ? String(config.rebuildThreshold) : undefined,
     RECENT_MESSAGES_RATIO: config.recentMessagesRatio !== undefined ? String(config.recentMessagesRatio) : undefined,
     MEMORY_RATIO: config.memoryRatio !== undefined ? String(config.memoryRatio) : undefined,
     TASK_PROGRESS_RATIO: config.taskProgressRatio !== undefined ? String(config.taskProgressRatio) : undefined,
+    CUSTOM_AGENTS: config.customAgents && config.customAgents.length > 0 ? JSON.stringify(config.customAgents) : undefined,
+    AGENT_OVERRIDES: config.agentOverrides && Object.keys(config.agentOverrides).length > 0
+      ? JSON.stringify(config.agentOverrides)
+      : undefined,
+    MCP_SERVERS: config.mcpServers && config.mcpServers.length > 0 ? JSON.stringify(config.mcpServers) : undefined,
+    THEME: config.theme || undefined,
+    LANGUAGE: config.language || undefined,
+    SHORTCUTS: config.shortcuts && Object.keys(config.shortcuts).length > 0 ? JSON.stringify(config.shortcuts) : undefined,
+    COMPOSE_ENABLED: config.composeEnabled !== undefined ? String(config.composeEnabled) : undefined,
+    COMPOSE_AUTO_EXECUTE: config.composeAutoExecute !== undefined ? String(config.composeAutoExecute) : undefined,
+    COMPOSE_MAX_STEPS: config.composeMaxSteps !== undefined ? String(config.composeMaxSteps) : undefined,
   };
 }

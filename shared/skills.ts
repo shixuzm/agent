@@ -6,6 +6,9 @@ import { getStore } from './store';
 import { chatCompletion } from './llm';
 import { randomUUID } from '../agents/_utils';
 import { runInference, MNNError } from './mnn';
+import { runDream } from './dream.js';
+import { runDistill } from './distill.js';
+import { runCompose } from './compose/index.js';
 
 export type SkillHandler = (params: Record<string, unknown>, env?: Record<string, string | undefined>) => Promise<unknown>;
 
@@ -519,6 +522,37 @@ const skillHandlers: Record<string, SkillHandler> = {
       }
       return { error: e instanceof Error ? e.message : String(e) };
     }
+  },
+
+  dream: async (params, env) => {
+    const store = getStore(env);
+    return runDream({
+      store,
+      env: env ?? {},
+      conversationIds: Array.isArray(params.conversationIds) ? params.conversationIds as string[] : undefined,
+      lookbackDays: typeof params.lookbackDays === 'number' ? params.lookbackDays : undefined,
+    });
+  },
+
+  distill: async (params, env) => {
+    const store = getStore(env);
+    return runDistill({
+      store,
+      env: env ?? {},
+      lookbackDays: typeof params.lookbackDays === 'number' ? params.lookbackDays : undefined,
+    });
+  },
+
+  compose: async (params, env) => {
+    const store = getStore(env);
+    const spec = String(params.spec ?? '');
+    const goal = params.goal ? String(params.goal) : undefined;
+    const options = {
+      autoExecute: Boolean(params.autoExecute),
+      maxSteps: typeof params.maxSteps === 'number' ? params.maxSteps : 20,
+      requireApproval: !params.autoExecute,
+    };
+    return runCompose(env ?? {}, store, spec, goal, options);
   },
 };
 
